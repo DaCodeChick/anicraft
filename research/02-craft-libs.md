@@ -1,7 +1,7 @@
 # 02 — Shared Libraries (`craft-libs`, `craft-fonts`)
 
 > **Scope.** Analysis of the shared Craft infrastructure and its reuse opportunities for
-> FlashCraft. Verified from `craft-libs/` and `craft-fonts/` source. Nothing was modified.
+> AniCraft. Verified from `craft-libs/` and `craft-fonts/` source. Nothing was modified.
 >
 > Key source files: `craft-libs/Cargo.toml`, `craft-libs/AGENTS.md`, `craft-libs/README.md`,
 > `craft-libs/crates/*/src/lib.rs`, `craft-libs/crates/ui/README.md`,
@@ -41,7 +41,7 @@ flushes the directory. Guarantees **atomicity** (all-or-nothing; a failed/crashe
 original bytes and removes the staging file) and documents the **durability** boundary. Orphaned
 staging-file sweeping is the app's responsibility.
 
-**FlashCraft use:** the atomic save path for the native `.flashcraft` document (and any
+**AniCraft use:** the atomic save path for the native `.anicraft` document (and any
 `config.toml`), plus Data Recovery copies. Directly reusable.
 
 ### 2.2 `craft-settings` — `config.toml` preferences store
@@ -52,7 +52,7 @@ memory as a `toml_edit::DocumentMut` so hand edits/comments and unknown keys sur
 provide a `Settings` impl (`APP_ID`, `SCHEMA_VERSION`) and their own defaults. Policy in
 `docs/settings-storage.md`.
 
-**FlashCraft use:** preferences (theme, last open, shortcut presets, workspace layouts, script
+**AniCraft use:** preferences (theme, last open, shortcut presets, workspace layouts, script
 security toggle). Directly reusable.
 
 ### 2.3 `craft-print` — system PDF spooler
@@ -61,7 +61,7 @@ security toggle). Directly reusable.
 `powershell` (no direct Win32). "PDF generation stays in each app." Exposes `Printer`, `Job`,
 discovery and submission; `Error::Spool(String)`.
 
-**FlashCraft use:** *optional* "Print stage" to PDF. Low priority (Flash's core is screen
+**AniCraft use:** *optional* "Print stage" to PDF. Low priority (Flash's core is screen
 animation); include if a print path is wanted. Reusable.
 
 ### 2.4 `craft-quit` — platform-correct quit
@@ -70,7 +70,7 @@ by closing the window (avoids an AppKit Touch Bar KVO crash). `quit()` and `on_c
 (hook placed last in `eframe::App::logic`) route window close through it. Unsaved-document
 decisions stay in each app.
 
-**FlashCraft use:** the app shell's quit/close handling. Directly reusable.
+**AniCraft use:** the app shell's quit/close handling. Directly reusable.
 
 ### 2.5 `craft-ui` — shared egui components (the big one)
 `crates/ui/README.md` (egui 0.36, Rust ≥ 1.95, `serde` feature for persisting the shared
@@ -104,8 +104,8 @@ No icons, fonts or application engines are bundled." Modules:
 optional egui docking surface; `docs/ui-components-audit.md` is the suite-wide source inventory
 and extraction priorities; `docs/theme-infrastructure.md` is the eight-app theme comparison.
 
-**FlashCraft use:** the entire panel/inspector/toolbar/tabs/docking shell with the Craft
-look-and-feel. FlashCraft supplies its own icon SVG catalog (original/open-licensed), its own
+**AniCraft use:** the entire panel/inspector/toolbar/tabs/docking shell with the Craft
+look-and-feel. AniCraft supplies its own icon SVG catalog (original/open-licensed), its own
 `theme.rs` tokens (dark primary), its own fonts (via `craft-fonts`), and dispatches its own
 commands. **Directly reusable — the single largest UI reuse.**
 
@@ -123,16 +123,16 @@ this repo**… The app uses it only through the optional `CRAFT_FONTS_DIR` build
 `crates/text/build.rs` into `<app>_text::CRAFT_FONTS`; never add it to a `Cargo.toml`. Everything
 must build, test and run with `CRAFT_FONTS` empty."
 
-**FlashCraft use:** UI fonts and any bundled document fonts via `CRAFT_FONTS_DIR`. Reusable; no
-font files are committed to FlashCraft.
+**AniCraft use:** UI fonts and any bundled document fonts via `CRAFT_FONTS_DIR`. Reusable; no
+font files are committed to AniCraft.
 
-## 4. Reuse summary for FlashCraft
+## 4. Reuse summary for AniCraft
 
 | Crate | Reuse | Notes |
 |-------|-------|-------|
-| `craft-ui` | **Yes (core)** | Docking, tabs, toolbars, split/resize, icon catalogs, widget palette. FlashCraft supplies assets, theme tokens, fonts, command dispatch. |
+| `craft-ui` | **Yes (core)** | Docking, tabs, toolbars, split/resize, icon catalogs, widget palette. AniCraft supplies assets, theme tokens, fonts, command dispatch. |
 | `craft-settings` | **Yes** | Preferences store (theme, layouts, shortcut presets, script security). |
-| `craft-atomic` | **Yes** | Atomic saves for `.flashcraft` + recovery copies. |
+| `craft-atomic` | **Yes** | Atomic saves for `.anicraft` + recovery copies. |
 | `craft-quit` | **Yes** | App-shell quit/close. |
 | `craft-print` | Optional | Stage→PDF print, if wanted. |
 | `craft-fonts` | **Yes** | UI/document fonts via `CRAFT_FONTS_DIR`; never commit fonts. |
@@ -140,37 +140,37 @@ font files are committed to FlashCraft.
 **Not in `craft-libs` (must come from elsewhere or be built):** any document model, rendering,
 geometry, color, animation/timeline, text shaping, format I/O, scripting, or app-specific
 themes/icons/localization. These are per-app or third-party (kurbo, peniko, vello_cpu, usvg,
-skrifa/harfrust, boa, Ruffle `swf`), or FlashCraft-specific (doc 08).
+skrifa/harfrust, boa, Ruffle `swf`), or AniCraft-specific (doc 08).
 
 ## 5. Constraints the shared design imposes
 
 1. **`craft-ui` is deliberately low-level.** It ships no assets, no complete theme, no engine.
-   FlashCraft must build its own `ui-egui` crate, `theme.rs` tokens, icon catalog, menus, and
-   command dispatch — the same as every sibling app. There is no "FlashCraft-ready" panel kit.
+   AniCraft must build its own `ui-egui` crate, `theme.rs` tokens, icon catalog, menus, and
+   command dispatch — the same as every sibling app. There is no "AniCraft-ready" panel kit.
 2. **Git-pin coupling.** Depending on `craft-libs` (and Ruffle `swf`, and any `effectcraft-*`)
    pins revisions; co-development needs `[patch]`. This is the accepted ecosystem cost but it
-   means FlashCraft tracks upstream `craft-libs` releases.
-3. **`craft-libs` accepts only broadly useful, app-free crates.** FlashCraft-specific helpers
+   means AniCraft tracks upstream `craft-libs` releases.
+3. **`craft-libs` accepts only broadly useful, app-free crates.** AniCraft-specific helpers
    (Flash display list, symbol model, XFL) **cannot** go into `craft-libs`; they live in
-   `flashcraft-*` crates. (A candidate future promotion — e.g. a shared geometry/color crate —
+   `anicraft-*` crates. (A candidate future promotion — e.g. a shared geometry/color crate —
    is a craftrules workstream, out of scope now.)
 4. **Layering must keep `craft-ui` above the engine.** "Lower layers cannot depend on `craft-ui`"
-   (EffectCraft `docs/architecture.md`). So FlashCraft's `ui-egui` is the only crate that may use
+   (EffectCraft `docs/architecture.md`). So AniCraft's `ui-egui` is the only crate that may use
    `craft-ui` (and `egui`/`eframe`), consistent with the layer tables.
 
 ## 6. Licensing
 
 `craft-libs` and `craft-fonts` are **MIT OR Apache-2.0** (dual, at your option), matching the
 apps. Bundled assets keep their own open licences, listed in `ATTRIBUTION.md` / `NOTICE`.
-Depending on them introduces no licence conflict with FlashCraft's MIT OR Apache-2.0.
+Depending on them introduces no licence conflict with AniCraft's MIT OR Apache-2.0.
 
 ## 7. Recommendations
 
 1. Depend on `craft-libs` (all five crates; `craft-print` optional) and `craft-fonts`
    (`CRAFT_FONTS_DIR`) by git pin, exactly as the siblings do.
-2. Build FlashCraft's `ui-egui` on `craft-ui::docking` + `layout` + `tabs` + `buttons` +
-   `icons`, with a FlashCraft `theme.rs` (dark primary, doc 06) and an original/open-licensed SVG
+2. Build AniCraft's `ui-egui` on `craft-ui::docking` + `layout` + `tabs` + `buttons` +
+   `icons`, with a AniCraft `theme.rs` (dark primary, doc 06) and an original/open-licensed SVG
    icon catalog.
-3. Do **not** attempt to put Flash-specific code in `craft-libs`; keep it in `flashcraft-*`.
+3. Do **not** attempt to put Flash-specific code in `craft-libs`; keep it in `anicraft-*`.
 4. Record the pinned `craft-libs` revision in the workspace once implementation begins, and add a
    `[patch]` block (commented) for local co-development, mirroring EffectCraft's FilmCraft pattern.

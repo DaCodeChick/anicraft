@@ -1,9 +1,9 @@
 # 04 — Rendering Architecture and Vector Tools
 
-> **Scope.** How FlashCraft renders vector + animated content to pixels, the stage viewport, and
+> **Scope.** How AniCraft renders vector + animated content to pixels, the stage viewport, and
 > vector editing. Verified from VectorCraft (`crates/render`, `crates/svg`, `crates/doc`,
 > `crates/tools`), PhotoCraft (`crates/vector`), EffectCraft (`crates/render`, `crates/gpu`);
-> recommendations for FlashCraft are marked.
+> recommendations for AniCraft are marked.
 
 ## 1. The vector primitive stack (reused, verified)
 
@@ -24,9 +24,9 @@ The suite builds vector art on a small, proven stack:
   (`vectorcraft-text`), EffectCraft, and FilmCraft (`filmcraft-text`). Glyph outlines are
   available for vector text; system fonts are scanned lazily.
 
-**Recommendation.** FlashCraft reuses `kurbo` + `peniko` + `vello_cpu` + `skrifa`/`harfrust`
+**Recommendation.** AniCraft reuses `kurbo` + `peniko` + `vello_cpu` + `skrifa`/`harfrust`
 directly (they are already the suite's choice and build for wasm). No new geometry/paint/raster
-engine is needed. A thin `flashcraft-geom`/`flashcraft-color` (or direct kurbo use) sits at L0,
+engine is needed. A thin `anicraft-geom`/`anicraft-color` (or direct kurbo use) sits at L0,
 consistent with the per-app foundation pattern (doc 01 §4).
 
 ## 2. VectorCraft's renderer as the reference pattern (verified)
@@ -44,7 +44,7 @@ thread, with caches per object and per effect; the GPU (wgpu) only composites th
   panning.
 
 This "CPU raster + culling + appearance stacks + offscreen effect caches" is exactly the pattern
-FlashCraft's renderer should follow for the vector stage.
+AniCraft's renderer should follow for the vector stage.
 
 ## 3. EffectCraft's CPU-reference / GPU-compositor pattern (verified)
 
@@ -58,12 +58,12 @@ EffectCraft and FilmCraft both use a stronger split:
 - A **frame-worker pool** (`ui-egui/src/frames.rs`) renders the on-screen frame first, then
   playback prefetch, then thumbnails; the UI never blocks on a frame.
 
-**Recommendation.** FlashCraft starts **CPU-first** (`vello_cpu` reference, with a per-layer/per-
+**Recommendation.** AniCraft starts **CPU-first** (`vello_cpu` reference, with a per-layer/per-
 symbol cache keyed by content hash + time), and defers a wgpu fast path to a later phase behind
 the same oracle (the CPU/GPU parity test discipline). This matches the suite and de-risks the
 initial release (doc 08, doc 10).
 
-## 4. FlashCraft's rendering architecture (recommendation)
+## 4. AniCraft's rendering architecture (recommendation)
 
 Rendering is a **compositor over the deterministic display list** produced by timeline evaluation
 (doc 03 §4.4). Pipeline:
@@ -73,7 +73,7 @@ Document + time t  ──evaluate()──►  DisplayList (stage → layers → 
                                       each with effective matrix, color, blend, filters, text)
                                      │
                                      ▼
-                 flashcraft-render (vello_cpu, CPU reference)
+                 anicraft-render (vello_cpu, CPU reference)
                    • build a peniko scene from the display list
                    • cull by the viewport bounds
                    • cache per (symbol id, local frame) and per (layer, frame) content hash
@@ -106,9 +106,9 @@ Key points:
 VectorCraft's **tools** model is the template: tool state machines emit `Action`
 (`Begin`/`Preview`/`Commit`/`Cancel`/`Exec`/`Dialog`/`SwitchTool`/`Notify`) that the engine
 executes, so every gesture is one replayable, testable, undoable unit (VectorCraft
-`crates/tools/src/lib.rs`). FlashCraft's tools map to Flash's:
+`crates/tools/src/lib.rs`). AniCraft's tools map to Flash's:
 
-| Flash tool | FlashCraft tool (Action-based) | Notes |
+| Flash tool | AniCraft tool (Action-based) | Notes |
 |------------|-------------------------------|-------|
 | Selection (V) | select | marquee + object selection; fill/stroke/whole-object sub-selection (Flash's 4 selection modes) |
 | Subselection (A) | direct | edit path vertices/handles (kurbo) |
@@ -144,7 +144,7 @@ executes, so every gesture is one replayable, testable, undoable unit (VectorCra
 
 ## 7. What is reused vs. new
 
-| Piece | Reused | New in FlashCraft |
+| Piece | Reused | New in AniCraft |
 |-------|--------|-------------------|
 | Geometry / paint types | kurbo, peniko | none (thin wrapper) |
 | CPU rasterizer | `vello_cpu` | the display-list→scene walk (Flash-specific) |
@@ -162,7 +162,7 @@ executes, so every gesture is one replayable, testable, undoable unit (VectorCra
 - **Caching is everything.** The display list is derived, so the renderer must cache aggressively:
   per (symbol id, local frame) for symbols, per (layer, frame) for layers, per (object, effect).
   EffectCraft's numbers (a 5,000-layer comp steady frame 0.5–6.9 ms after fixing O(n²) menu
-  builds and per-frame deep clones) show the discipline pays off. FlashCraft should keep
+  builds and per-frame deep clones) show the discipline pays off. AniCraft should keep
   `Arc`-shared display-list nodes (no per-frame deep clones) and virtualized timeline rendering.
 - **The render hot path stays Rust.** Scripting (boa) and event dispatch stay out of the per-frame
   render (doc 05) so the CPU rasterizer's throughput is not throttled by JS.

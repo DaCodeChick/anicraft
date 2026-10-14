@@ -1,6 +1,6 @@
 # 07 — Formats and Compatibility
 
-> **Scope.** FlashCraft's native format and its import/export/interop surface: XFL, SWF, FLA,
+> **Scope.** AniCraft's native format and its import/export/interop surface: XFL, SWF, FLA,
 > SVG, animated images, video, sprite sheets, and standalone interactive output — including the
 > technical and **legal/clean-room** limits. Verified: Ruffle `swf` crate (source + `Cargo.toml` +
 > license), sibling format crates (VectorCraft `svg`/`pdf`/`format`, EffectCraft `lottie`/
@@ -8,11 +8,11 @@
 
 ## 1. Format strategy (recommendation)
 
-FlashCraft has **one native authoring format** and several **interchange** formats:
+AniCraft has **one native authoring format** and several **interchange** formats:
 
 | Role | Format | Direction | Notes |
 |------|--------|-----------|-------|
-| **Native (primary)** | `.flashcraft` | read/write | Versioned, compressed, structurally-shared JSON (the suite's native-format idiom). Lossless authoring + editor state. |
+| **Native (primary)** | `.anicraft` | read/write | Versioned, compressed, structurally-shared JSON (the suite's native-format idiom). Lossless authoring + editor state. |
 | **Authoring interchange** | **XFL** | read/write | Open XML (the uncompressed FLA). Round-trips the full authoring model. |
 | **Playback / legacy** | **SWF** | read + practical write | The Flash runtime format. Via Ruffle `swf`. |
 | **Static vector** | SVG | read/write | One frame (or a selected frame) as SVG 1.1; animation via SMIL is out of scope (use Lottie/video). |
@@ -30,9 +30,9 @@ FlashCraft has **one native authoring format** and several **interchange** forma
 - **XFL is open and round-trips authoring data**, but it is verbose (one XML file per symbol + a
   DOM document), uses an edge-based shape encoding and shared-edge model, and has known
   quirks (rounding, `bin/*.dat` media, `SymDepend.cache`). Making it the *primary* store would
-  make structural-sharing undo and incremental editing awkward and couple FlashCraft to Adobe's
+  make structural-sharing undo and incremental editing awkward and couple AniCraft to Adobe's
   XML evolution.
-- **The native `.flashcraft`** (the suite idiom: VectorCraft `.vectorcraft`, EffectCraft
+- **The native `.anicraft`** (the suite idiom: VectorCraft `.vectorcraft`, EffectCraft
   `.ecproj`, FilmCraft `.fcproj` — "the document as readable JSON, versioned, saved atomically,
   backward-readable") gives lossless, fast, undo-friendly authoring. XFL and SWF are then robust
   import/export targets. This mirrors how every sibling app has a native format + open
@@ -54,13 +54,13 @@ part of Ruffle, **MIT OR Apache-2.0**) **reads and writes** SWF 19 — `swf/src/
 `swf/src/write.rs` both exist, with `Swf`/`Tag`/all the character and display-list types
 (`ruffle/swf/src/types.rs`, `tag_code.rs`). Its dependencies (`bitflags`, `bitstream-io`,
 `encoding_rs`, `num-*`, `log`, `flate2`, `lzma-rs`, `enum-map`, `simple_asn1`) are ordinary and
-wasm-friendly. This is the **single highest-value reuse** for FlashCraft: full SWF interop with
+wasm-friendly. This is the **single highest-value reuse** for AniCraft: full SWF interop with
 **zero format code**.
 
 **Recommendation.**
 - **SWF import:** parse with `swf::read` into a `Swf` (tags), then convert characters (
   `DefineShape*`, `DefineSprite`, `DefineButton*`, `DefineMorphShape*`, `DefineText*`,
-  `DefineFont*`, `DefineBits*`, `DefineSound`) into `flashcraft-doc` symbols and the
+  `DefineFont*`, `DefineBits*`, `DefineSound`) into `anicraft-doc` symbols and the
   `PlaceObject`/`ShowFrame`/`FrameLabel` tag stream into scenes/layers/frames/instances. Fuzz the
   importer (untrusted input).
 - **SWF export ("Publish"):** serialize the document to tags — emit `FileAttributes` (version
@@ -70,7 +70,7 @@ wasm-friendly. This is the **single highest-value reuse** for FlashCraft: full S
   vector shapes, movie-clip symbols, buttons, bitmaps, (static + editable) text, sounds, morphs,
   and frame labels; **not** every exotic tag (video, advanced font4 CSM, etc.) in v1.
 - **Version target:** read any version `swf` supports; write a mid-range version (e.g. 13–19)
-  that covers the documented feature set FlashCraft authors.
+  that covers the documented feature set AniCraft authors.
 - **Do not** attempt to read/write undocumented SWF 20–30 (clean-room + no public spec). If a
   future need arises, it is a separate, spec-driven effort.
 
@@ -92,13 +92,13 @@ piecewise cubic, 3n+1 points).
 
 **Recommendation.**
 - **XFL import:** unzip → parse `DOMDocument.xml` (width/height/frameRate/backgroundColor/
-  currentTimeline) + each `LIBRARY/*.xml` (symbols) + `bin/*` (media) → build `flashcraft-doc`.
+  currentTimeline) + each `LIBRARY/*.xml` (symbols) + `bin/*` (media) → build `anicraft-doc`.
   Map `DOMSymbolInstance` → instance (matrix/transform-point/color), `DOMShape` (fills/strokes/
   edges) → shapes, `DOMFrame` (duration/keyMode/tweenType/acceleration/tweens) → frames/tweens,
   layer `layerType` (normal/guide/folder/mask/masked) → layer kinds.
-- **XFL export:** serialize `flashcraft-doc` to the same structure (one XML per symbol + a DOM
+- **XFL export:** serialize `anicraft-doc` to the same structure (one XML per symbol + a DOM
   document + `bin/` for embedded media), matching the XSD. This is a **new crate**
-  (`flashcraft-xfl`) — there is no Rust XFL writer in the suite or (to our knowledge) a
+  (`anicraft-xfl`) — there is no Rust XFL writer in the suite or (to our knowledge) a
   maintained one to depend on. It is medium effort (XML in/out + the edge-based shape encoding).
 - **XFL is the clean-room "open authoring" interchange** — ideal for the pipeline use case
   (programmatic scene authoring, external tooling) that motivated XFL's existence, and a safer
@@ -121,7 +121,7 @@ limitation, not an oversight.
 
 - **SVG** — VectorCraft `crates/svg` (usvg import + own writer) shows the pattern: write one
   frame of the display list as SVG 1.1 (paths, fills/strokes, gradients in `<defs>`, text as
-  `<text>`/`<tspan>` or outlines, images as `data:` URIs). FlashCraft reuses this for "Export
+  `<text>`/`<tspan>` or outlines, images as `data:` URIs). AniCraft reuses this for "Export
   frame as SVG" (static). *Animated* SVG (SMIL) is **out of scope** — use Lottie or video for
   animation.
 - **Animated images** — rasterize `evaluate()` per frame → GIF (the `gif` crate, already a
@@ -130,7 +130,7 @@ limitation, not an oversight.
 - **Video** — FilmCraft's pure-Rust **codec/encoder/mux** crates (`filmcraft-h264enc`,
   `filmcraft-hevc`, `filmcraft-av1`, `filmcraft-vp9`, `filmcraft-prores`, `filmcraft-aac`,
   `filmcraft-isobmff`, …) are already reused by **EffectCraft** (git-pinned) for H.264/HEVC/AV1
-  MP4, ProRes MOV, WebM, image sequences, and audio (WAV/AIFF). FlashCraft can reuse the **same
+  MP4, ProRes MOV, WebM, image sequences, and audio (WAV/AIFF). AniCraft can reuse the **same
   git-pinned crates** for "Export as video" (a Flash export is a fixed-size, fixed-frame-rate
   sequence — a natural fit for the render→encode→mux pipeline, doc 01 §3.3). Audio (event sounds,
   streaming) would use FilmCraft's audio decode + cpal (desktop) / WebAudio (web).
@@ -138,11 +138,11 @@ limitation, not an oversight.
   per-frame duration) — straightforward from `evaluate()`.
 - **Standalone interactive** — (a) **Lottie** bonus (EffectCraft `crates/lottie` exports Lottie;
   a subset of Flash motion-tween vector animation maps cleanly), and (b) a **WASM/JS player**
-  (the wasm32 build of `flashcraft-render` + a runtime, doc 05 §6). Both are Phase 8.
+  (the wasm32 build of `anicraft-render` + a runtime, doc 05 §6). Both are Phase 8.
 
 ## 6. Persistence and recovery (reuse)
 
-- **Atomic saves** via `craft-atomic` (doc 02) for `.flashcraft`; **backward-readable** versioning
+- **Atomic saves** via `craft-atomic` (doc 02) for `.anicraft`; **backward-readable** versioning
   (VectorCraft reads "down to v1"); a `savedBy`/`schema` header (EffectCraft) so newer files warn
   and older fields are dropped safely.
 - **Autosave / Data Recovery** copies in the background (VectorCraft/EffectCraft pattern) using
@@ -156,7 +156,7 @@ limitation, not an oversight.
 - `evaluate(document, t)` is pure → the same frame renders the same pixels every run (doc 03/04).
 - **Exports are reproducible:** same document + settings → same file (FilmCraft convention;
   frames rendered in fixed groups, encoders deterministic). This is tested, not assumed.
-- Round-trip tests: `.flashcraft` → XFL → `.flashcraft` and `.flashcraft` → SWF → Ruffle-playback
+- Round-trip tests: `.anicraft` → XFL → `.anicraft` and `.anicraft` → SWF → Ruffle-playback
   frame-comparison (using Ruffle as an oracle for SWF conformance) are the key validation gates.
 
 ## 8. Licensing summary
@@ -165,7 +165,7 @@ limitation, not an oversight.
 |-------------|------------------|------------|
 | Ruffle `swf` crate | MIT OR Apache-2.0 | git/crates.io dependency (not copied in) |
 | SWF spec v19 | Adobe-published open spec | implement from spec / use `swf` |
-| XFL | Open XML + public XSD | new `flashcraft-xfl` crate (clean-room from schema) |
+| XFL | Open XML + public XSD | new `anicraft-xfl` crate (clean-room from schema) |
 | FLA (classic binary) | **Proprietary, no public spec** | **not supported** (clean-room) |
 | kurbo/peniko/vello_cpu/usvg/skrifa/harfrust/boa | various open (see doc 01/05) | crates.io dependencies |
 | FilmCraft codecs/encoders | MIT OR Apache-2.0 (same family) | git-pinned dependency (EffectCraft pattern) |
@@ -173,7 +173,7 @@ limitation, not an oversight.
 
 ## 9. Interop scope recommendation (decision for the user)
 
-- **In:** `.flashcraft` (native), **XFL** (round-trip), **SWF** (import all; export the documented
+- **In:** `.anicraft` (native), **XFL** (round-trip), **SWF** (import all; export the documented
   tag set), SVG (static frame), GIF/APNG/PNG-sequence, **video** (H.264/HEVC/AV1/ProRes/WebM via
   FilmCraft codecs), sprite sheets, Lottie (bonus), WASM/JS player, PDF (optional print).
 - **Out:** **FLA** (proprietary), **SWF 20–30** (undocumented), **ActionScript 1/2/3 authoring**

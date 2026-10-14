@@ -33,13 +33,13 @@ cases.
 
 ### R3. Cross-repo dependency coupling — **MEDIUM**
 Reusing `effectcraft-time`/`effectcraft-keyframe` (git-pinned) and Ruffle `swf` and (optionally)
-FilmCraft codecs introduces **version-pinning and upstream-tracking** burden, and means FlashCraft
+FilmCraft codecs introduces **version-pinning and upstream-tracking** burden, and means AniCraft
 tracks another team's API.
 - **Mitigation:** the git-pin + `[patch]` pattern is already the ecosystem idiom (EffectCraft→
   FilmCraft). Pin exact revisions; keep the reuse surface **narrow and stable** (time, keyframe,
   swf — all low-churn). If a pinned crate's API churns, vendor a thin local copy (a last resort,
   documented).
-- **Residual risk:** an upstream breaking change in a pinned crate could require a FlashCraft
+- **Residual risk:** an upstream breaking change in a pinned crate could require a AniCraft
   update.
 
 ### R4. boa scripting throughput — **MEDIUM**
@@ -87,7 +87,7 @@ A wgpu compositor is significant work. **Recommendation: defer** (Phase 9.1, dec
 
 ## 2. Uncertainties and missing information
 
-- **U1. SWF versions 20–30.** Not publicly documented (loc.gov FDD). FlashCraft targets ≤ 19.
+- **U1. SWF versions 20–30.** Not publicly documented (loc.gov FDD). AniCraft targets ≤ 19.
   **[INVESTIGATE]** whether the specific files a user cares about use post-19 features; if so,
   that is a separate spec-driven effort (or a Ruffle dependency for playback only).
 - **U2. XFL quirks.** XFL is open but has known rough edges (shape value rounding, `bin/*.dat`
@@ -132,7 +132,7 @@ A wgpu compositor is significant work. **Recommendation: defer** (Phase 9.1, dec
   **fonts live in `craft-fonts`**, never in this repo; **no Adobe iconography/artwork**.
 - **C6. Reuse Ruffle by dependency, not by copying its source** into this repo (git-pin idiom).
 - **C7. ActionScript compatibility is future interop only** (via Ruffle for *playing* legacy SWF);
-  FlashCraft-authored content is JavaScript (boa), a clean-room modern language.
+  AniCraft-authored content is JavaScript (boa), a clean-room modern language.
 
 ## 4. What is solidly grounded (low risk)
 
@@ -159,7 +159,7 @@ Ruffle-as-oracle strategy.
 
 ## 6. Recommendations (recap)
 
-1. Proceed with the doc 08 architecture (new `flashcraft-*` app; reuse craft-libs + Ruffle `swf`
+1. Proceed with the doc 08 architecture (new `anicraft-*` app; reuse craft-libs + Ruffle `swf`
    + `effectcraft-time`/`keyframe` + boa + vello_cpu; build the Flash document/evaluator/renderer/
    scripting-model natively).
 2. De-risk in order: **`evaluate`+CPU render (Phase 2)** → timeline (4) → symbols (5) → tweens
@@ -176,7 +176,7 @@ Ruffle-as-oracle strategy.
 
 | # | Decision | Options | Recommendation | Gate |
 |---|----------|---------|----------------|------|
-| **D1** | **Native document format** | (a) `.flashcraft` (versioned, compressed, structurally-shared JSON) primary + XFL/SWF interchange — **(recommended)**; (b) XFL-primary; (c) SWF-primary | (a) | Before Phase 1 / 2.2, 2.6 |
+| **D1** | **Native document format** | (a) `.anicraft` (versioned, compressed, structurally-shared JSON) primary + XFL/SWF interchange — **(recommended)**; (b) XFL-primary; (c) SWF-primary | (a) | Before Phase 1 / 2.2, 2.6 |
 | **D2** | **Reuse scope** | (a) Depend on Ruffle `swf` + `effectcraft-time`/`effectcraft-keyframe` (git pins) + `boa` + `vello_cpu` + `kurbo`/`peniko`/`skrifa`/`harfrust` + `craft-libs` — **(recommended)**; (b) port/vendor time+keyframe locally; (c) also pin FilmCraft codecs for video | (a) (add FilmCraft pins in Phase 8) | Before Phase 1.1 |
 | **D3** | **Scripting engine** | (a) **boa** (`boa_engine` 0.22) — **(recommended)**; (b) QuickJS (C, breaks pure-Rust); (c) V8 (huge, not wasm) | (a) | Before Phase 7 |
 | **D4** | **Interop scope** | (a) SWF read-all + practical write (≤ 19) + XFL round-trip; **no FLA, no SWF 20–30** — **(recommended)**; (b) SWF-only; (c) broader (incl. post-19, future) | (a) | Before Phase 8 |

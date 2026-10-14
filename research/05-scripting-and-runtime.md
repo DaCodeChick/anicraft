@@ -1,6 +1,6 @@
 # 05 — Scripting and Interactive Runtime
 
-> **Scope.** Research on the scripting system for FlashCraft's interactive content: JavaScript
+> **Scope.** Research on the scripting system for AniCraft's interactive content: JavaScript
 > runtimes, the script-to-native bridge, the Flash object model, sandboxing, and legacy
 > ActionScript interop. Verified from EffectCraft (`crates/expr`, `crates/script`), PdfCraft
 > (`crates/js`), and Ruffle (`core/src/avm1`, `core/src/avm2`); runtime comparisons are external
@@ -12,7 +12,7 @@ Flash distinguishes the **authoring document** (what is stored: stage, timelines
 keyframes, and *where* scripts attach) from the **interactive runtime** (what happens at
 playback: the live display list, per-frame state, event dispatch, and running scripts).
 
-**Recommendation (carried through doc 08):** FlashCraft keeps that split. Scripts are *referenced*
+**Recommendation (carried through doc 08):** AniCraft keeps that split. Scripts are *referenced*
 by the document (a frame, button, or movie-clip instance carries a `script` id or inline source)
 but **never executed during document editing**. The runtime builds the display list from
 `evaluate()` (doc 03), installs the scripting object model over it, and runs scripts in a
@@ -41,13 +41,13 @@ simple workloads, V8/Deno pass more conformance tests). Treat as orders of magni
 **Decision.** **Use boa (`boa_engine` 0.22).** Rationale:
 1. **It is the suite standard.** EffectCraft (expressions + full scripting + ScriptUI) and
    PdfCraft (Acrobat JS) both already depend on `boa_engine 0.22` (verified in their
-   `Cargo.toml`). Adopting it keeps FlashCraft idiomatic and means the object-model and
+   `Cargo.toml`). Adopting it keeps AniCraft idiomatic and means the object-model and
    sandboxing patterns are already proven in this codebase family.
 2. **Pure Rust + wasm32.** Boa builds for `wasm32-unknown-unknown` (with its `js` feature for the
    browser clock/random), needs no C/C++ toolchain, and has no `unsafe` — matching the
    workspace's `unsafe_code = "forbid"` and the "pure Rust (no handwritten JS/TS)" and
    `cargo xtask wasm` conventions. QuickJS/V8/Deno all violate one of these.
-3. **Performance is adequate for the role.** FlashCraft scripts run in the **authoring and
+3. **Performance is adequate for the role.** AniCraft scripts run in the **authoring and
    interactive layers**, not the per-frame render hot path (which stays Rust, doc 04). Authoring
    scripts (build a scene, keyframe properties) and interactive handlers (button clicks, simple
    per-frame logic) are short-lived; boa's interpreter speed is acceptable. Heavy computation
@@ -85,9 +85,9 @@ PdfCraft's `pdfcraft-js` (verified `Cargo.toml`) is the same idea at smaller sca
 (feature `annex-b`) with a **bounded** Acrobat-JS object model subset (`event`, `getField`, `app`,
 `util`, `console`).
 
-**Recommendation for FlashCraft.** Replicate this architecture (it is exactly the
+**Recommendation for AniCraft.** Replicate this architecture (it is exactly the
 "script-to-native application interface" the task asks about):
-- `flashcraft-script` crate: a `prelude.js` defining the **Flash object model** (§4) + a
+- `anicraft-script` crate: a `prelude.js` defining the **Flash object model** (§4) + a
   `runtime.rs` with `__query`/`__exec` natives, a thread-local active session, undo groups, and
   error reporting.
 - **Scripts read via JSON queries and mutate via engine commands** → scripted edits are undoable,
@@ -115,7 +115,7 @@ Modeled on the Flash/Animate (AS3) display-list API that Ruffle implements (veri
 - **Library:** `Library` (`getDefinition(id)`, `addDefinition`, `removeDefinition`, iteration),
   `SymbolDefinition` types (Graphic/MovieClip/Button/Bitmap/Sound/Font/Shape/Video).
 - **Properties as keyframeable values:** each animatable property exposes a keyframe array
-  (`setKeyframes`, `valueAtTime`, `addKeyframe`) reusing `flashcraft-keyframe` (doc 03/08), so
+  (`setKeyframes`, `valueAtTime`, `addKeyframe`) reusing `anicraft-keyframe` (doc 03/08), so
   scripts can author motion tweens the same way the UI does.
 - **Events:** `addEventListener(type, handler)` / `removeEventListener`, event objects
   (`Event.ENTER_FRAME`, `Event.FRAME_CONSTRUCTED`, mouse events, button states). Dispatch is
@@ -123,7 +123,7 @@ Modeled on the Flash/Animate (AS3) display-list API that Ruffle implements (veri
   in `frame_lifecycle.rs`, are the reference ordering).
 
 The **AS3 object model is the reference for names/semantics** (it is what Ruffle implements and
-what classic Flash content expects); **JavaScript is the syntax** that FlashCraft executes (boa).
+what classic Flash content expects); **JavaScript is the syntax** that AniCraft executes (boa).
 This gives a modern scripting language with the familiar Flash object graph.
 
 ## 5. Event dispatch, timeline control, and playback
@@ -131,7 +131,7 @@ This gives a modern scripting language with the familiar Flash object graph.
 - **Frame loop (runtime):** each display tick, the runtime (a) advances the stage timeline by one
   frame (or to the playhead), (b) runs the frame phases (enterFrame → construct → frame scripts →
   exitFrame, mirroring Ruffle's `FramePhase`), (c) dispatches events, (d) renders via
-  `flashcraft-render`. Deterministic and decoupled from the UI refresh.
+  `anicraft-render`. Deterministic and decoupled from the UI refresh.
 - **Timeline control** from scripts: `gotoAndPlay/Stop`, `play/pause`, set `currentTime`,
   add/replace frames — all as **engine commands** (undoable when authoring) or **runtime state**
   (during playback, not undoable). The distinction: *authoring-time* scripts (run from the editor,
@@ -148,9 +148,9 @@ This gives a modern scripting language with the familiar Flash object graph.
   to JSON + a small WASM (or JS) runtime (boa or a JS port) + the display-list renderer, or simply
   **compile the animation to a self-contained JS bundle** (Lottie is a natural bonus — EffectCraft
   already exports Lottie, doc 01/03). Because the whole stack builds for wasm32 (doc 01), a
-  browser player is achievable from the same `flashcraft-render` + runtime.
-- **Native standalone playback:** a `flashcraft-cli play` / a headless player that loads a
-  `.flashcraft` (or SWF) and runs the runtime + renderer with audio (cpal), for "publish" output
+  browser player is achievable from the same `anicraft-render` + runtime.
+- **Native standalone playback:** a `anicraft-cli play` / a headless player that loads a
+  `.anicraft` (or SWF) and runs the runtime + renderer with audio (cpal), for "publish" output
   that is not the authoring app.
 - **Deterministic export:** the same document exports the same frames (FilmCraft reproducible-
   export convention), enabling byte-stable sprite sheets / video / image-sequence output.
@@ -170,11 +170,11 @@ compiler in the app.
   bytecode**) are the legacy Flash scripting languages. The **ABC format is fully documented**
   (Adobe `avmplus` `abcFormat-46-16.txt`; major 46 / minor 16; ~164 opcodes), and **Ruffle
   implements both AVM1 and AVM2** (verified `ruffle/core/src/avm1`, `ruffle/core/src/avm2`).
-- **Recommendation:** for the **initial release**, FlashCraft scripts are **JavaScript (boa)**
+- **Recommendation:** for the **initial release**, AniCraft scripts are **JavaScript (boa)**
   with the Flash object model (§4) — a modern, clean-room scripting system. **ActionScript
   compatibility is a documented *future interoperability* option**, achievable by running legacy
   ABC through Ruffle's AVM2 (or a dependency on it) when *importing/playing SWF*, not by
-  requiring FlashCraft-authored content to be AS. This satisfies the task: "Legacy ActionScript
+  requiring AniCraft-authored content to be AS. This satisfies the task: "Legacy ActionScript
   compatibility may be investigated as a future interoperability feature, but it is not a
   mandatory initial implementation requirement."
 - **Clean-room note:** implementing a *new* JS object model and a JS runtime is clean-room.
@@ -187,7 +187,7 @@ compiler in the app.
 - Deciding the **exact object-model surface** for v1 (a bounded subset like PdfCraft, vs. a
   broad AS3-like surface) — affects scripting API stability.
 - Whether to **embed Ruffle** for legacy SWF/ABC playback (full F1–F30 playback) or keep
-  FlashCraft's player to its own content + SWF import only.
+  AniCraft's player to its own content + SWF import only.
 - Web export target: WASM runtime vs. compiled Lottie/JS — a Phase 8 decision.
 
 ## 10. Summary of decisions

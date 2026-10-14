@@ -1,7 +1,7 @@
 # 06 — UI and UX
 
-> **Scope.** The Craft design conventions FlashCraft must follow, the dark-mode palette, and the
-> proposed FlashCraft interface organization mapped from the classic Flash/Animate workflow.
+> **Scope.** The Craft design conventions AniCraft must follow, the dark-mode palette, and the
+> proposed AniCraft interface organization mapped from the classic Flash/Animate workflow.
 > Verified: VectorCraft `crates/ui-egui/src/theme.rs` (tokens/palette), `craft-libs/crates/ui`
 > (docking/layout/tabs/buttons/icons), sibling `AGENTS.md`/`docs`. External: classic Flash/Animate
 > workspace documentation. The four user-provided screenshots in `references/` are noted as
@@ -63,7 +63,7 @@ pasteboard** (`#1e1e1e`) darker than the panels, and **high-visibility** guide/s
 (cyan/magenta) that read as overlays, not UI. This satisfies the task's requirement to "avoid
 unnecessarily bright backgrounds, eye-straining contrast, or visually noisy UI."
 
-**Recommendation.** FlashCraft's `theme.rs` uses this dark palette as the **primary** theme (a
+**Recommendation.** AniCraft's `theme.rs` uses this dark palette as the **primary** theme (a
 light theme can be added later). It should add a small set of **Flash-specific tokens**:
 - `timeline_track` / `timeline_playhead` / `timeline_keyframe` (normal/blank) / `timeline_span`,
 - `layer_*` (normal/guide/mask/masked row colors, layer-color swatches),
@@ -78,7 +78,7 @@ light theme can be added later). It should add a small set of **Flash-specific t
 
 - **Fonts:** from `craft-fonts` via `CRAFT_FONTS_DIR` (never committed). A UI font for chrome and
   any bundled document fonts. VectorCraft uses 13 pt body text in its dark theme; EffectCraft
-  11 pt; FlashCraft should pick one (recommend 13 pt to match the vector/creative apps).
+  11 pt; AniCraft should pick one (recommend 13 pt to match the vector/creative apps).
 - **Icons:** an original (MIT/Apache) or open-licensed (OSI/CC0/CC) SVG catalog, monochrome,
   `currentColor`, ~1.75 stroke width (the `craft-ui` `SvgStyle` default in its README example),
   installed through `craft-ui::icons`. **No Adobe iconography** (clean-room rule, doc 01/AGENTS).
@@ -119,7 +119,7 @@ The "Essentials" workspace has these regions (consistent across Flash CS→Anima
 
 The panel set docks, undocks, groups (tabs), and floats; **workspaces** are saved layouts.
 
-## 5. Proposed FlashCraft interface organization (recommendation)
+## 5. Proposed AniCraft interface organization (recommendation)
 
 Map the Flash regions onto Craft conventions (docking via `craft-ui`, dark theme, thin panels over
 the engine, everything a command):
@@ -210,7 +210,7 @@ preset (doc 01 §2.3).
 
 ## 7. What is reused vs. new
 
-| Piece | Reused | New in FlashCraft |
+| Piece | Reused | New in AniCraft |
 |-------|--------|-------------------|
 | Docking, tabs, toolbars, splits, resize | `craft-ui` | the panel set + workspaces |
 | Icon buttons + SVG icon pipeline | `craft-ui` | the original/open Flash tool & panel icon set |

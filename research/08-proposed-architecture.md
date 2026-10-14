@@ -1,4 +1,4 @@
-# 08 — Proposed FlashCraft Architecture
+# 08 — Proposed AniCraft Architecture
 
 > **Status: PROPOSAL — not yet approved.** This is the research-backed architecture. It follows the
 > verified Craft conventions (doc 01), reuses shared infrastructure (doc 02) and Ruffle `swf`
@@ -6,40 +6,40 @@
 > the **renderer**, and the **interactive runtime** cleanly separated (doc 03, 05).
 >
 > Components are classified: **[E]** exists in a Craft repo (reuse by dependency/pattern),
-> **[A]** adapt/extend an existing piece, **[N]** new in FlashCraft, **[D]** decision needed.
+> **[A]** adapt/extend an existing piece, **[N]** new in AniCraft, **[D]** decision needed.
 
 ## 1. Application shell and workspace
 
 Mirror the sibling shape exactly:
 
 ```
-flashcraft/
+anicraft/
 ├── Cargo.toml                 # workspace: edition 2024, resolver 3, [workspace.dependencies], [lints]
 ├── crates/
-│   ├── geom/                  # flashcraft-geom      (L0) kurbo wrapper: Point/Vec2/Affine/Rect, twips<->px
-│   ├── color/                 # flashcraft-color     (L0) sRGB/linear, alpha, blend modes
-│   ├── time/                  # flashcraft-time      (L0) REUSE effectcraft-time (Tick, FrameRate) — [E]
-│   ├── keyframe/              # flashcraft-keyframe  (L1) REUSE effectcraft-keyframe + CreateJS easing — [A]
-│   ├── doc/                   # flashcraft-doc       (L1) THE document model (stage/scenes/timelines/symbols) — [N]
-│   ├── shapes/                # flashcraft-shapes    (L2) vector primitives: paths/fills/strokes/edges, morph — [N]
-│   ├── text/                  # flashcraft-text      (L2) skrifa+harfrust shaping, point/area text — [A]
-│   ├── timeline/              # flashcraft-timeline  (L3) deterministic evaluate() → DisplayList — [N]
-│   ├── render/                # flashcraft-render    (L3) DisplayList→pixels (vello_cpu CPU ref) — [A]
-│   ├── gpu/                   # flashcraft-gpu       (L3, later) wgpu compositor (parity-tested) — [A][D]
-│   ├── tools/                 # flashcraft-tools     (L4) tool state machines (Action) — [A]
-│   ├── engine/                # flashcraft-engine    (L5) Session, commands, undo, file I/O, guard — [A]
-│   ├── script/                # flashcraft-script    (L5) boa + Flash object model (__query/__exec) — [A]
-│   ├── swf/                   # flashcraft-swf       (L3) SWF I/O over Ruffle `swf` — [A]
-│   ├── xfl/                   # flashcraft-xfl       (L3) XFL I/O (new, from XSD) — [N]
-│   ├── svg/                   # flashcraft-svg       (L3) SVG export of a frame — [A]
-│   ├── export/                # flashcraft-export    (L3) image-seq/GIF/video/sprite-sheet/Lottie — [A]
-│   ├── ui-egui/               # flashcraft-ui-egui   (L6) egui frontend: stage, timeline, library, panels — [A]
-│   ├── mcp/                   # flashcraft-mcp       (L6) MCP server (JSON-RPC stdio) — [A]
-│   └── testkit/               # flashcraft-testkit   (dev) fixtures, generators, golden render — [A]
+│   ├── geom/                  # anicraft-geom      (L0) kurbo wrapper: Point/Vec2/Affine/Rect, twips<->px
+│   ├── color/                 # anicraft-color     (L0) sRGB/linear, alpha, blend modes
+│   ├── time/                  # anicraft-time      (L0) REUSE effectcraft-time (Tick, FrameRate) — [E]
+│   ├── keyframe/              # anicraft-keyframe  (L1) REUSE effectcraft-keyframe + CreateJS easing — [A]
+│   ├── doc/                   # anicraft-doc       (L1) THE document model (stage/scenes/timelines/symbols) — [N]
+│   ├── shapes/                # anicraft-shapes    (L2) vector primitives: paths/fills/strokes/edges, morph — [N]
+│   ├── text/                  # anicraft-text      (L2) skrifa+harfrust shaping, point/area text — [A]
+│   ├── timeline/              # anicraft-timeline  (L3) deterministic evaluate() → DisplayList — [N]
+│   ├── render/                # anicraft-render    (L3) DisplayList→pixels (vello_cpu CPU ref) — [A]
+│   ├── gpu/                   # anicraft-gpu       (L3, later) wgpu compositor (parity-tested) — [A][D]
+│   ├── tools/                 # anicraft-tools     (L4) tool state machines (Action) — [A]
+│   ├── engine/                # anicraft-engine    (L5) Session, commands, undo, file I/O, guard — [A]
+│   ├── script/                # anicraft-script    (L5) boa + Flash object model (__query/__exec) — [A]
+│   ├── swf/                   # anicraft-swf       (L3) SWF I/O over Ruffle `swf` — [A]
+│   ├── xfl/                   # anicraft-xfl       (L3) XFL I/O (new, from XSD) — [N]
+│   ├── svg/                   # anicraft-svg       (L3) SVG export of a frame — [A]
+│   ├── export/                # anicraft-export    (L3) image-seq/GIF/video/sprite-sheet/Lottie — [A]
+│   ├── ui-egui/               # anicraft-ui-egui   (L6) egui frontend: stage, timeline, library, panels — [A]
+│   ├── mcp/                   # anicraft-mcp       (L6) MCP server (JSON-RPC stdio) — [A]
+│   └── testkit/               # anicraft-testkit   (dev) fixtures, generators, golden render — [A]
 ├── apps/
-│   ├── flashcraft/            # L7 desktop app (eframe/wgpu, cpal, rfd, craft-quit)
-│   ├── flashcraft-cli/        # L7 headless (run, convert, export, render, bench, play, mcp)
-│   └── flashcraft-web/        # L7 browser (wasm32, WebGPU/WebGL2)
+│   ├── anicraft/            # L7 desktop app (eframe/wgpu, cpal, rfd, craft-quit)
+│   ├── anicraft-cli/        # L7 headless (run, convert, export, render, bench, play, mcp)
+│   └── anicraft-web/        # L7 browser (wasm32, WebGPU/WebGL2)
 └── xtask/                     # layers, wasm, ci, corpus
 ```
 
@@ -72,7 +72,7 @@ doc 01 §2.2.)
 
 ## 3. Component breakdown (by concern)
 
-### 3.1 Document and scene model — `flashcraft-doc` **[N]** (L1)
+### 3.1 Document and scene model — `anicraft-doc` **[N]** (L1)
 The core new work (doc 03 §4). Pure data + serde, `Arc` structural sharing (VectorCraft pattern):
 
 ```
@@ -107,7 +107,7 @@ SymbolDef { id, name, kind:
   masked layer below, folder parents valid, instance `def` ids exist. Engine runs it after every
   edit (FilmCraft `Sequence::check` pattern).
 
-### 3.2 Vector shapes — `flashcraft-shapes` **[N]** (L2)
+### 3.2 Vector shapes — `anicraft-shapes` **[N]** (L2)
 The authoring vector primitive (doc 03 §2, doc 04 §1):
 - `Shape { bounds, fills: Vec<FillStyle>, strokes: Vec<LineStyle>, edges: Vec<Edge> }` where
   `FillStyle = Color | LinearGradient | RadialGradient | FocalGradient | Bitmap { … }` and an
@@ -120,12 +120,12 @@ The authoring vector primitive (doc 03 §2, doc 04 §1):
   edges/fills; a `MorphDef { from, to }`. The **interpolation algorithm** (vertex/edge/fill
   matching + ratio `u`) is **[N]** (doc 10 risk).
 
-### 3.3 Text — `flashcraft-text` **[A]** (L2)
+### 3.3 Text — `anicraft-text` **[A]** (L2)
 skrifa (font access) + harfrust (shaping: kerning, bidi, complex scripts) + `craft-fonts` (via
 `CRAFT_FONTS_DIR`). Point and area text, static vs editable, render as vector glyph outlines or
 outline to paths. (VectorCraft/EffectCraft/FilmCraft all do this; reuse the pattern.)
 
-### 3.4 Timeline evaluation — `flashcraft-timeline` **[N]** (L3) — *the determinism core*
+### 3.4 Timeline evaluation — `anicraft-timeline` **[N]** (L3) — *the determinism core*
 `evaluate(doc: &Document, t: Tick, opts: EvalOpts) -> DisplayList`, a **pure function** (doc 03
 §4.4):
 - For the active scene at `t`: for each layer (respecting `kind` — guide layers are skipped for
@@ -136,14 +136,14 @@ outline to paths. (VectorCraft/EffectCraft/FilmCraft all do this; reuse the patt
   **MovieClip** its own time (`playback.first_frame`, loop mode) — and emits its content with the
   instance `matrix`/`color`/`blend`/`filters` composed in.
 - **Tweens:** a motion tween interpolates the instance `matrix`/`color`/`filters` between
-  keyframes via `flashcraft-keyframe` (CreateJS easing); a shape tween interpolates the two
+  keyframes via `anicraft-keyframe` (CreateJS easing); a shape tween interpolates the two
   `Shape` forms via the morph algorithm.
 - Output: a flattened `DisplayList` of `DrawItem`s (each a shape/text/bitmap with an effective
   `Affine`, paint, blend, opacity, filter chain, and bounds), in draw order. **No stored
   per-frame state** — always derived. This is the Flash analogue of how Ruffle reconstructs the
   display list from tags each frame (doc 03 §2).
 
-### 3.5 Rendering — `flashcraft-render` **[A]** (L3)
+### 3.5 Rendering — `anicraft-render` **[A]** (L3)
 `DisplayList → Pixmap` on **`vello_cpu`** (CPU reference), per doc 04:
 - Build a peniko scene from the display list; **cull by the viewport** view transform; apply
   fills/strokes/gradients/text/images; **clip groups** from mask layers.
@@ -152,11 +152,11 @@ outline to paths. (VectorCraft/EffectCraft/FilmCraft all do this; reuse the patt
 - **Filters** (blur, drop shadow, glow, gradient glow, bevel) as offscreen `vello_cpu` passes,
   cached.
 - **Onion skinning** = `evaluate` at `t±k` rendered at low alpha under the current frame.
-- **`flashcraft-gpu`** (later, **[D]**): a wgpu compositor implementing the same steps,
+- **`anicraft-gpu`** (later, **[D]**): a wgpu compositor implementing the same steps,
   **parity-tested** against the CPU (≤ 1/255 at 8 bpc), `backend = Cpu | Gpu | Auto` (the
   EffectCraft/FilmCraft pattern).
 
-### 3.6 Editing operations — `flashcraft-tools` **[A]** (L4)
+### 3.6 Editing operations — `anicraft-tools` **[A]** (L4)
 Tool state machines emit `Action` (`Begin`/`Preview`/`Commit`/`Cancel`/`Exec`/`Dialog`/
 `SwitchTool`/`Notify`) that the engine executes (VectorCraft `tools` pattern, doc 01 §2.5). The
 Flash tool set (doc 04 §5): selection/subselection/lasso, pen, line/rect/oval/poly-star, text,
@@ -164,7 +164,7 @@ paint bucket/ink bottle, eyedropper, eraser, free transform, gradient transform,
 Transformation is an `Affine` on the selection/instance; grouping creates a `Group`; hit-testing
 is against the current frame's display list (uniform with rendering).
 
-### 3.7 Engine — `flashcraft-engine` **[A]** (L5)
+### 3.7 Engine — `anicraft-engine` **[A]** (L5)
 `Session { doc: Arc<Document>, editor: EditorState, history: History, commands: Registry, … }`:
 - **Command registry** (`CommandSpec { id, label, menu, shortcut, params, enabled, run, journal }`);
   `Session::execute(id, params)` and `Session::edit(label, |doc, state| …)`. The menu bar, command
@@ -174,13 +174,13 @@ is against the current frame's display list (uniform with rendering).
 - **Undo/redo** = `Arc<Document>` snapshot swaps (constant time); modified-state follows the last
   saved snapshot (EffectCraft).
 - **`guard`** catches a panic at every entry point and rolls the document back (VectorCraft).
-- **File I/O:** the `FORMATS` table (`.flashcraft`, XFL, SWF, SVG, GIF/APNG/PNG-seq, video,
+- **File I/O:** the `FORMATS` table (`.anicraft`, XFL, SWF, SVG, GIF/APNG/PNG-seq, video,
   sprite-sheet, Lottie); atomic save via `craft-atomic`; backward-readable versioning.
 - **Autosave/Data Recovery** in the background; **events** drained by frontends each frame.
 - **Control channel** (`--control <port>`, JSON lines, pointer/keyboard injection + screenshots)
   and **MCP** (doc 01 §2.3).
 
-### 3.8 Scripting / interactive runtime — `flashcraft-script` **[A]** (L5)
+### 3.8 Scripting / interactive runtime — `anicraft-script` **[A]** (L5)
 Per doc 05: boa (`boa_engine`) with a `prelude.js` Flash object model (Stage/MovieClip/Sprite/
 DisplayObject/Timeline/Library/Button/Text) and a `runtime.rs` `__query`/`__exec` bridge +
 thread-local session + undo groups + sandbox (fresh context per run, file-scoped reads,
@@ -188,26 +188,26 @@ writes/network behind a pref, stack retry). The **runtime** (authoring-time = en
 undoable; playback-time = runtime state over `evaluate()`'s display list with the frame phases
 enterFrame→construct→frameScripts→exitFrame, mirroring Ruffle).
 
-### 3.9 Import/export — `flashcraft-swf`/`xfl`/`svg`/`export` **[A/N]** (L3)
-- `flashcraft-swf`: thin adapter over **Ruffle `swf`** — import (tags → `flashcraft-doc`) and
+### 3.9 Import/export — `anicraft-swf`/`xfl`/`svg`/`export` **[A/N]** (L3)
+- `anicraft-swf`: thin adapter over **Ruffle `swf`** — import (tags → `anicraft-doc`) and
   practical export (document → tags, documented set) (doc 07 §2).
-- `flashcraft-xfl`: new XFL reader/writer from the public XSD (doc 07 §3).
-- `flashcraft-svg`: export one frame as SVG 1.1 (VectorCraft pattern).
-- `flashcraft-export`: image sequences / GIF / APNG / video (FilmCraft codecs, git) / sprite
+- `anicraft-xfl`: new XFL reader/writer from the public XSD (doc 07 §3).
+- `anicraft-svg`: export one frame as SVG 1.1 (VectorCraft pattern).
+- `anicraft-export`: image sequences / GIF / APNG / video (FilmCraft codecs, git) / sprite
   sheets / Lottie (EffectCraft pattern) / WASM-JS player (doc 07 §5).
 
 ### 3.10 Persistence and recovery **[E/A]**
 `craft-settings` (preferences: theme, workspaces, shortcut presets, script security),
-`craft-atomic` (atomic `.flashcraft` saves + recovery copies), `craft-quit` (app-shell quit),
+`craft-atomic` (atomic `.anicraft` saves + recovery copies), `craft-quit` (app-shell quit),
 `craft-print` (optional stage→PDF), `craft-fonts` (fonts via `CRAFT_FONTS_DIR`).
 
 ### 3.11 Testing and validation **[A]**
 - Unit tests per crate; **property tests** (`proptest`) for parsers and `Document::check`
-  invariants; **fuzz tests** for every importer (`.flashcraft`, XFL, SWF) and the control/MCP
+  invariants; **fuzz tests** for every importer (`.anicraft`, XFL, SWF) and the control/MCP
   protocol (VectorCraft `import_fuzz` pattern).
 - **Golden-image render tests**: CPU renderer vs reference; (later) GPU vs CPU parity (≤ 1/255).
 - **Determinism tests**: same (document, `t`) → identical pixels across runs.
-- **Round-trip tests**: `.flashcraft`→XFL→`.flashcraft`; `.flashcraft`→SWF→Ruffle-playback frame
+- **Round-trip tests**: `.anicraft`→XFL→`.anicraft`; `.anicraft`→SWF→Ruffle-playback frame
   comparison (Ruffle as the SWF-conformance oracle).
 - **Shared corpora** in `photocraft-corpus` (fetched pinned + SHA-256); no large binary fixtures
   committed.
@@ -217,28 +217,28 @@ enterFrame→construct→frameScripts→exitFrame, mirroring Ruffle).
 ```mermaid
 flowchart TD
   subgraph Authoring
-    T[Tools: Action] --> E[flashcraft-engine: Session + commands + undo]
-    E --> D[(flashcraft-doc: Arc<Document>)]
+    T[Tools: Action] --> E[anicraft-engine: Session + commands + undo]
+    E --> D[(anicraft-doc: Arc<Document>)]
   end
   subgraph Deterministic
-    D --> EV[flashcraft-timeline: evaluate(doc,t) -> DisplayList]
+    D --> EV[anicraft-timeline: evaluate(doc,t) -> DisplayList]
   end
   subgraph Pixels
-    EV --> R[flashcraft-render: vello_cpu CPU ref]
-    R --> G[flashcraft-gpu: wgpu (later, parity-tested)]
+    EV --> R[anicraft-render: vello_cpu CPU ref]
+    R --> G[anicraft-gpu: wgpu (later, parity-tested)]
   end
   subgraph Runtime
-    EV --> RT[flashcraft-script runtime: frame phases + events + boa]
+    EV --> RT[anicraft-script runtime: frame phases + events + boa]
     RT -->|authoring-time: commands| E
     RT -->|playback-time: runtime state| RT
   end
   subgraph Formats
-    D --> SWF[flashcraft-swf: Ruffle swf]
-    D --> XFL[flashcraft-xfl]
-    D --> SVG[flashcraft-svg]
-    EV --> EXP[flashcraft-export: seq/GIF/video/sheet/Lottie]
+    D --> SWF[anicraft-swf: Ruffle swf]
+    D --> XFL[anicraft-xfl]
+    D --> SVG[anicraft-svg]
+    EV --> EXP[anicraft-export: seq/GIF/video/sheet/Lottie]
   end
-  R --> UI[flashcraft-ui-egui: stage + timeline + library + panels]
+  R --> UI[anicraft-ui-egui: stage + timeline + library + panels]
   E --> UI
   D --> UI
   UI -->|craft-ui: docking/tabs/theme| UI
@@ -267,7 +267,7 @@ flowchart TD
 | **Shape morph algorithm** | **N** | — (risk) |
 | **Flash scripting object model** | **N** | Ruffle AVM2/display_object as reference |
 | **XFL reader/writer** | **N** | from public XSD |
-| **`.flashcraft` native format** | **N** | suite idiom |
+| **`.anicraft` native format** | **N** | suite idiom |
 | **Flash UI: stage/timeline/library/actions/movie-explorer** | **N** | on `craft-ui` |
 | GPU compositor | **D** | defer; EffectCraft/FilmCraft pattern |
 | Boolean ops backend | **D** | kurbo-based port vs. a dependency |
@@ -275,7 +275,7 @@ flowchart TD
 
 ## 6. Key architectural tradeoffs (recap, decisions in doc 10 §7)
 
-1. **Native `.flashcraft` + XFL/SWF interchange** (vs. XFL- or SWF-primary). Chosen for
+1. **Native `.anicraft` + XFL/SWF interchange** (vs. XFL- or SWF-primary). Chosen for
    lossless, undo-friendly authoring; costs maintaining XFL + SWF on top.
 2. **Reuse generic EffectCraft primitives (time, keyframe) but build Flash's document/renderer
    natively.** EffectCraft's `project`/`render` are bound to the After Effects model and would
@@ -293,9 +293,9 @@ flowchart TD
 ## 7. What this does NOT propose (boundaries)
 
 - No changes to any existing Craft repo or to `craft-libs` (Flash-specific code stays in
-  `flashcraft-*`; any future shared-crate promotion is a separate craftrules workstream).
+  `anicraft-*`; any future shared-crate promotion is a separate craftrules workstream).
 - No FLA support, no SWF 20–30, no ActionScript authoring (future interop only).
-- No 3D, no particle systems, no advanced After-Effects-style effects — FlashCraft is 2D vector
+- No 3D, no particle systems, no advanced After-Effects-style effects — AniCraft is 2D vector
   animation + interactivity in the Flash/Animate scope.
 - No web *authoring* target in v1 — the web build is a player/light authoring surface (wasm32),
   matching the siblings' web apps.

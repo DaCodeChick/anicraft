@@ -1,6 +1,6 @@
 # 03 — Flash Authoring Model
 
-> **Scope.** The document, timeline, symbol, and animation model FlashCraft must author. Distinguishes
+> **Scope.** The document, timeline, symbol, and animation model AniCraft must author. Distinguishes
 > **verified** (Ruffle `swf`/`core` source), **external** (SWF spec, XFL schema, public Flash
 > documentation), and **recommendations**. See doc 07 for format/persistence details and doc 08 for
 > how this maps to crates.
@@ -85,7 +85,7 @@ maps onto **characters** (library definitions) and a **display list** driven by 
   { fill_styles: Vec<FillStyle>, line_styles: Vec<LineStyle> }`, and `shape: Vec<ShapeRecord>`
   where `ShapeRecord = StyleChange | StraightEdge | CurvedEdge`. `FillStyle = Color |
   LinearGradient | RadialGradient | FocalGradient | Bitmap`. `LineStyle` = width, fill, and flags
-  (caps, joins, miter limit, pixel hinting, scale-lock). This is the vector primitive FlashCraft
+  (caps, joins, miter limit, pixel hinting, scale-lock). This is the vector primitive AniCraft
   must read/write and (for authoring) edit.
 - **PlaceObject** (`PlaceObject`): `version, action, depth, matrix, color_transform, ratio,
   name, clip_depth, class_name, filters, background_color, blend_mode, clip_actions, is_visible`.
@@ -101,7 +101,7 @@ maps onto **characters** (library definitions) and a **display list** driven by 
 (`frame_lifecycle.rs`): AVM2 frames run phases **Enter → Construct → FrameScripts → Exit → Idle**,
 firing `enterFrame` / `frameConstructed` / `exitFrame`; `PlaceObject` tags execute at
 **Construct**; a `MovieClip` owns its display list by **depth**; the `library` holds characters.
-This is the *playback* side — FlashCraft's authoring document is the *source* of these tags, and
+This is the *playback* side — AniCraft's authoring document is the *source* of these tags, and
 its renderer reproduces the same display-list construction deterministically (doc 04).
 
 ## 3. How the model appears in XFL (external, open)
@@ -146,9 +146,9 @@ XFL is the natural **authoring interchange**: it round-trips the full model (lay
 tweens, symbols, instances, media) in a readable, schema-described, open format — and is the
 basis for SWF publishing (Animate publishes XFL→SWF).
 
-## 4. The model FlashCraft must author (recommendation)
+## 4. The model AniCraft must author (recommendation)
 
-FlashCraft's document model should be a **modern, editable, undoable** representation of the §1
+AniCraft's document model should be a **modern, editable, undoable** representation of the §1
 model that can **emit SWF tags** and **round-trip XFL**. Design points (detail in doc 08):
 
 1. **Separate the library from the timelines.** A `Library` maps `SymbolId → SymbolDefinition`.
@@ -193,7 +193,7 @@ model that can **emit SWF tags** and **round-trip XFL**. Design points (detail i
 
 ## 5. Mapping to the Craft infrastructure
 
-| Flash concept | Reuse / source | New in FlashCraft |
+| Flash concept | Reuse / source | New in AniCraft |
 |---------------|----------------|-------------------|
 | Time base (frame rate, exact ticks) | `effectcraft-time` / `filmcraft-time` (`Tick`, rational `FrameRate`) | none |
 | Keyframe model + easing (motion tween) | `effectcraft-keyframe` (temporal linear/bezier/hold, spatial bezier, arc-length) + CreateJS easing functions | CreateJS easing set + per-target ease mapping |

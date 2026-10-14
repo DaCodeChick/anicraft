@@ -2,7 +2,7 @@
 
 > **Scope.** This document compares the six local Craft applications and the shared
 > repositories, documenting **verified** architectural conventions (cited to files) and the
-> parts most relevant to FlashCraft. Sibling paths are relative to `~/Documents/GitHub/`.
+> parts most relevant to AniCraft. Sibling paths are relative to `~/Documents/GitHub/`.
 >
 > Verified sources: each repo's `Cargo.toml`, `AGENTS.md`, `docs/architecture.md`, and the
 > listed crate `lib.rs` headers. Repos inspected read-only; nothing was modified.
@@ -33,10 +33,10 @@ Shared repos present locally:
   `craft-quit`, `craft-settings`, `craft-ui`.
 - **`craft-fonts/`** — font assets + `craft-fonts` crate (manifest, `CRAFT_FONTS_DIR`, `embed`).
 - **`ruffle/`** — the Flash Player emulator (MIT OR Apache-2.0); its `swf` crate is the basis for
-  FlashCraft's SWF interop (see doc 07).
+  AniCraft's SWF interop (see doc 07).
 - **`photocraft-corpus/`** — shared real-file test oracles (fetched pinned, SHA-256 verified).
 
-## 2. Verified common architecture (the conventions FlashCraft must follow)
+## 2. Verified common architecture (the conventions AniCraft must follow)
 
 These are consistent across all six apps and are the strongest evidence of the house style.
 
@@ -117,10 +117,10 @@ planned crates; `platform` is the single crate allowed `unsafe`, per its ADR 000
 EffectCraft depends on **FilmCraft's** pure-Rust codec/media crates by **git revision**
 (`filmcraft-codecs`, `filmcraft-media`, `filmcraft-frame`, … pinned to one rev), with commented
 `[patch]` blocks for local co-development. This is the established mechanism for sharing
-substantive crates across repos — and it is the mechanism FlashCraft would use for Ruffle `swf`
+substantive crates across repos — and it is the mechanism AniCraft would use for Ruffle `swf`
 and any reused `effectcraft-*` primitives (doc 02, 08).
 
-## 3. App-by-app notes (relevance to FlashCraft)
+## 3. App-by-app notes (relevance to AniCraft)
 
 ### 3.1 VectorCraft (closest for vector drawing) — `vectorcraft/`
 - **Document model** (`crates/doc`): `Document { version, title, units, color_mode, artboards,
@@ -138,7 +138,7 @@ and any reused `effectcraft-*` primitives (doc 02, 08).
 - **Engine** (`crates/engine`): ~710 commands in `src/cmd/*`, `guard`, `journal`, autosave,
   recovery.
 - **MCP** (`crates/mcp`): JSON-RPC over stdio, `Remote` (control channel) or `Headless`.
-- **Reuse for FlashCraft:** vector document patterns, `vello_cpu` renderer, SVG/PDF export,
+- **Reuse for AniCraft:** vector document patterns, `vello_cpu` renderer, SVG/PDF export,
   tool→command pattern, `kurbo`/`peniko`/`skrifa`/`harfrust` usage, native-format design.
 
 ### 3.2 EffectCraft (closest for timeline/tweening/scripting) — `effectcraft/`
@@ -169,7 +169,7 @@ and any reused `effectcraft-*` primitives (doc 02, 08).
   PNG/JPEG/TIFF/EXR sequences, GIF, WAV/AIFF.
 - **UI** (`crates/ui-egui`): docking (uses `craft-ui::docking` + `layout`), panels, viewer,
   **timeline**, **graph editor**, dialogs, control channel.
-- **Reuse for FlashCraft:** `time` + `keyframe` (generic animation), the CPU-reference/GPU
+- **Reuse for AniCraft:** `time` + `keyframe` (generic animation), the CPU-reference/GPU
   compositor pattern, the boa `__query`/`__exec` scripting bridge, Lottie export, the
   timeline/graph-editor UI patterns. **Not** directly reusable: `project`/`render` (bound to the
   After Effects model).
@@ -191,7 +191,7 @@ and any reused `effectcraft-*` primitives (doc 02, 08).
   aac/ac3/mpa/flac/opus, isobmff/matroska/mxf/cfb/mpegts/ogg).
 - **`platform`**: the single `unsafe` crate — hardware video decode/encode FFI (VideoToolbox,
   Media Foundation, VA-API, NVENC) behind `codecs::VideoDecoder` / `export::VideoEncoder`.
-- **Reuse for FlashCraft:** the exact-tick time base (or EffectCraft's equivalent), the
+- **Reuse for AniCraft:** the exact-tick time base (or EffectCraft's equivalent), the
   export/encode/mux pipeline and codec crates for **video output**, the audio pipeline (cpal,
   mixer) for event/streaming sounds, the frame-worker playback pattern.
 
@@ -207,8 +207,8 @@ and any reused `effectcraft-*` primitives (doc 02, 08).
   instance per call; every failure is an `Error`, never a panic.
 - **Tablet** (`crates/tablet`): pen pressure/tilt/rotation on macOS (AppKit local monitor) and
   Linux X11 (XInput2 raw events); the only `unsafe` in the crate.
-- **Reuse for FlashCraft:** the wasmi **plugin sandboxing model** (fuel, no imports, fresh
-  instance) as the template for any FlashCraft extension mechanism; tablet input for
+- **Reuse for AniCraft:** the wasmi **plugin sandboxing model** (fuel, no imports, fresh
+  instance) as the template for any AniCraft extension mechanism; tablet input for
   pressure-sensitive drawing; vector stroke/raster helpers as reference.
 
 ### 3.5 PdfCraft (JS engine, forms, printing) — `pdfcraft/`
@@ -219,35 +219,35 @@ and any reused `effectcraft-*` primitives (doc 02, 08).
   `craft-print`.
 - **Vendored/patched** crates under `vendor/` (`[patch.crates-io]`) with an `ATTRIBUTION.toml` —
   a model for documenting non-crate.io dependencies.
-- **Reuse for FlashCraft:** the bounded-boa-object-model pattern; `craft-print` for any
+- **Reuse for AniCraft:** the bounded-boa-object-model pattern; `craft-print` for any
   print-to-PDF of a stage; the vendoring/attribution documentation pattern.
 
 ### 3.6 LightCraft (RAW pipeline, GPU, AI) — `lightcraft/`
 - RAW develop pipeline (`develop`, `pipeline`, `raster`, `color`), denoise (candle), SAM3
   segmentation (`segment`), catalog/preview, `gpu` (wgpu, no GL), `mcp`. Has Nix (`flake.nix`),
   a web profile, and a `dist` profile.
-- **Reuse for FlashCraft:** minimal — included for completeness; confirms the wgpu + `mcp` +
+- **Reuse for AniCraft:** minimal — included for completeness; confirms the wgpu + `mcp` +
   web-profile conventions.
 
 ## 4. Duplication and constraints introduced by the current design
 
 - **Per-app foundation crates.** `geom`, `color`, `raster` exist **independently** in each app
   (e.g. `vectorcraft-geom`, `effectcraft-geom`, `filmcraft-geom`, `photocraft-geom`,
-  `lightcraft-geom`). They have not been promoted to `craft-libs`. Consequence: FlashCraft will
-  either add its own `flashcraft-geom`/`flashcraft-color` (consistent, but duplicative) or depend
-  on kurbo/moxcms directly. **Recommendation (doc 08):** build a thin `flashcraft-geom` over
+  `lightcraft-geom`). They have not been promoted to `craft-libs`. Consequence: AniCraft will
+  either add its own `anicraft-geom`/`anicraft-color` (consistent, but duplicative) or depend
+  on kurbo/moxcms directly. **Recommendation (doc 08):** build a thin `anicraft-geom` over
   kurbo for now; a future craftrules workstream could promote a shared geometry/color crate.
 - **The same engine pattern is re-derived per app.** `Session`, `CommandSpec`, `guard`,
   control channel, and MCP server are structurally identical across apps but not shared.
-  Consequence: FlashCraft re-implements these (thinly) per the convention; they are small and
+  Consequence: AniCraft re-implements these (thinly) per the convention; they are small and
   well-understood.
 - **`craft-ui` is the only shared *frontend* piece**, and it deliberately stays low (no assets,
   no complete themes, no app engines). So each app keeps its own `theme.rs`, icons, fonts, and
-  localization. FlashCraft will do the same.
+  localization. AniCraft will do the same.
 - **Cross-repo dependencies are git-pinned**, which adds version-pinning and co-development
   burden (`[patch]`). This is an accepted cost in the ecosystem.
 
-## 5. What FlashCraft can and cannot take
+## 5. What AniCraft can and cannot take
 
 | Need | Source | Take directly? |
 |------|--------|----------------|
@@ -260,9 +260,9 @@ and any reused `effectcraft-*` primitives (doc 02, 08).
 | Plugin sandboxing (wasmi), tablet input, stroke/raster helpers | PhotoCraft | **Patterns** |
 | Bounded-boa object-model pattern | PdfCraft / EffectCraft | **Pattern** |
 | SWF read/write, Flash runtime reference, AVM2 | Ruffle | **`swf` crate (dep)**; runtime as reference only |
-| Flash symbol/instance, stage/timeline authoring, XFL, Flash scripting model, `.flashcraft` | — | **New in FlashCraft** |
+| Flash symbol/instance, stage/timeline authoring, XFL, Flash scripting model, `.anicraft` | — | **New in AniCraft** |
 
-**Conclusion.** FlashCraft is a genuinely new app (the symbol/instance + stage/timeline authoring
+**Conclusion.** AniCraft is a genuinely new app (the symbol/instance + stage/timeline authoring
 model and the Flash scripting object model do not exist in the suite), but it stands on a deep
 base of shared infrastructure, a reusable format reader/writer (Ruffle `swf`), and proven
 patterns (layering, commands, copy-on-write undo, CPU-reference/GPU, boa scripting). The bulk of

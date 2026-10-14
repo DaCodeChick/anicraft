@@ -1,6 +1,6 @@
-# FlashCraft — instructions for agents
+# AniCraft — instructions for agents
 
-FlashCraft is a proposed open-source, cross-platform, Rust-native 2D vector animation and
+AniCraft is a proposed open-source, cross-platform, Rust-native 2D vector animation and
 interactive-content authoring application in the **Craft (ArtCraft) family** — a modern
 spiritual successor to **Macromedia Flash / Adobe Animate**. It combines classic Flash
 authoring (stage, timeline, layers, keyframes, symbols, buttons, motion/shape tweening,
@@ -10,7 +10,7 @@ PhotoCraft, PdfCraft, LightCraft).
 
 > ## ⛔ RESEARCH-ONLY MODE — NO IMPLEMENTATION IS AUTHORIZED
 >
-> **FlashCraft is currently in research-only mode.** As of this writing, the repository
+> **AniCraft is currently in research-only mode.** As of this writing, the repository
 > contains **no application source code**: only a `.gitignore` and a `references/` folder of
 > user-provided screenshots.
 >
@@ -49,16 +49,16 @@ for the proposed (not yet approved) architecture.
 
 ## 2. Craft ecosystem conventions (follow these)
 
-These are verified conventions from the sibling repos. FlashCraft must follow them.
+These are verified conventions from the sibling repos. AniCraft must follow them.
 
 - **Workspace shape.** A Cargo workspace (edition 2024, resolver 3) with `crates/*` (library
-  crates named `flashcraft-<dir>`), `apps/flashcraft`, `apps/flashcraft-cli`,
-  `apps/flashcraft-web`, and `xtask`. Workspace package fields and `[lints]` are inherited.
+  crates named `anicraft-<dir>`), `apps/anicraft`, `apps/anicraft-cli`,
+  `apps/anicraft-web`, and `xtask`. Workspace package fields and `[lints]` are inherited.
 - **Layering, enforced.** `cargo xtask layers` must enforce that a crate depends only on lower
   layers and that nothing below the UI layer depends on `egui`/`eframe`/`winit`/`rfd`/`cpal`/
   `muda`. The same engine runs the desktop app, the CLI, the web build, the control channel,
   and the MCP server.
-- **Engine-first.** Project-changing actions go through a `Session` (`flashcraft_engine`).
+- **Engine-first.** Project-changing actions go through a `Session` (`anicraft_engine`).
 - **Everything is a command.** Every user-visible action is a `CommandSpec` (id, label, menu
   path, shortcut, params doc, `enabled()`, `run()`, journal flag). Menus, the command palette,
   the JSON control channel, the CLI, and MCP all dispatch the same ids.
@@ -110,7 +110,7 @@ These are verified conventions from the sibling repos. FlashCraft must follow th
 4. **Reuse at the right layer.** Reuse shared infrastructure (`craft-libs`), the Flash format
    reader/writer (Ruffle `swf`), and generic animation primitives (time, keyframes). Build
    Flash-specific models (symbol/instance, stage/timeline authoring, Flash object model for
-   scripting) in FlashCraft — do not force EffectCraft's After Effects model into Flash.
+   scripting) in AniCraft — do not force EffectCraft's After Effects model into Flash.
 5. **The renderer is a compositor over a display list.** The timeline evaluation produces a
    display list (stage → layers → placed instances/shapes at a time `t`); the renderer flattens
    it to pixels with `vello_cpu` (CPU reference) and, later, a wgpu fast path.

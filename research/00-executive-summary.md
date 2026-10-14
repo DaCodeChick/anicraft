@@ -1,11 +1,11 @@
 # 00 — Executive Summary
 
-> **Status:** Research complete. **FlashCraft is in research-only mode — no implementation is
+> **Status:** Research complete. **AniCraft is in research-only mode — no implementation is
 > authorized.** This document summarizes the research in `research/` and the recommended
 > direction. All findings distinguish *verified in source* (sibling Craft repos, Ruffle) from
 > *external* (public specifications and web research) and from *recommendations*.
 
-## 1. What FlashCraft is
+## 1. What AniCraft is
 
 A native, open-source, Rust 2D vector animation and interactive-content authoring application
 in the Craft (ArtCraft) family — a modern successor to **Macromedia Flash / Adobe Animate**. It
@@ -31,7 +31,7 @@ interoperate with the open Flash formats (SWF, XFL) rather than depend on propri
    expression and scripting runtimes (boa), Lottie export, and the CPU-reference/GPU compositor
    pattern. FilmCraft supplies the exact-tick time base, the export pipeline, and playback.
    None, however, has Flash's **symbol/instance** or **stage/timeline authoring** model — that
-   is FlashCraft's core new work. (01, 03, 04, 08)
+   is AniCraft's core new work. (01, 03, 04, 08)
 
 3. **The Flash format layer is reusable and legally clean.** Ruffle (MIT OR Apache-2.0) ships a
    standalone `swf` crate (v0.3.0, on crates.io) that **reads and writes SWF 19**. SWF 19 is the
@@ -44,11 +44,11 @@ interoperate with the open Flash formats (SWF, XFL) rather than depend on propri
    (expressions + full scripting + ScriptUI) and PdfCraft (Acrobat JS) both already use boa. It
    is pure Rust, builds for `wasm32`, needs no C toolchain, and its `__query`/`__exec` JSON
    bridge pattern (scripts read via JSON snapshots and mutate via engine commands, so edits are
-   undoable) is exactly the separation FlashCraft wants between scripting and the document model.
+   undoable) is exactly the separation AniCraft wants between scripting and the document model.
    boa is slower than QuickJS/V8 by roughly an order of magnitude or more, but that is
    acceptable for authoring-time scripting and keeps the workspace pure-Rust. (05)
 
-5. **A native `.flashcraft` document format is recommended, with XFL/SWF as interchange.**
+5. **A native `.anicraft` document format is recommended, with XFL/SWF as interchange.**
    This mirrors the sibling pattern (VectorCraft `.vectorcraft` + SVG/PDF; EffectCraft
    `.ecproj` + Lottie): a versioned, compressed, structurally-shared native format for lossless
    authoring, plus robust import/export. SWF is a *playback* format and is a poor primary
@@ -65,8 +65,8 @@ interoperate with the open Flash formats (SWF, XFL) rather than depend on propri
 
 ## 3. Recommended direction (summary of 08)
 
-Build FlashCraft as a new sibling app with `apps/flashcraft`, `-cli`, `-web` and
-`flashcraft-*` crates, following the standard layering. Reuse:
+Build AniCraft as a new sibling app with `apps/anicraft`, `-cli`, `-web` and
+`anicraft-*` crates, following the standard layering. Reuse:
 
 - **Directly (git/crates.io deps):** `craft-libs` (`craft-ui`, `craft-settings`, `craft-atomic`,
   `craft-print`, `craft-quit`); Ruffle's **`swf`** crate for SWF I/O; `kurbo`/`peniko`
@@ -76,15 +76,15 @@ Build FlashCraft as a new sibling app with `apps/flashcraft`, `-cli`, `-web` and
 - **Adapt/extend:** the CPU-reference/GPU compositor pattern (EffectCraft), the tool→command
   pattern (VectorCraft), the `__query`/`__exec` scripting bridge (EffectCraft), the
   symbol definition/instance model (VectorCraft's simple symbol, extended for Flash timelines).
-- **Build new in FlashCraft:** the Flash **document/scene model** (stage, scenes, timelines,
+- **Build new in AniCraft:** the Flash **document/scene model** (stage, scenes, timelines,
   layers, frames, symbols/instances, buttons), the **display-list compositor** for Flash
   (stage → layers → placed content at time `t`), **motion & shape tweening/evaluation**, the
-  **XFL reader/writer**, the **Flash scripting object model**, and the **`.flashcraft`
+  **XFL reader/writer**, the **Flash scripting object model**, and the **`.anicraft`
   native format**.
 
 The centerpiece architectural decision — a **pure, deterministic timeline evaluation** that
 produces a display list, with rendering, interaction, and scripting layered on top and the
-document kept separate from runtime state — is what lets FlashCraft reuse the Craft
+document kept separate from runtime state — is what lets AniCraft reuse the Craft
 infrastructure while keeping the authoring model clean.
 
 ## 4. Strongest reuse opportunities (ranked)
@@ -100,8 +100,8 @@ infrastructure while keeping the authoring model clean.
 
 ## 5. Major tradeoffs
 
-- **Native format: `.flashcraft` (JSON, structurally shared) vs. XFL vs. SWF.** Recommended:
-  native `.flashcraft` primary, XFL + SWF interchange. Tradeoff: maintain a second rich format
+- **Native format: `.anicraft` (JSON, structurally shared) vs. XFL vs. SWF.** Recommended:
+  native `.anicraft` primary, XFL + SWF interchange. Tradeoff: maintain a second rich format
   (XFL) and a playback format (SWF) on top of the native one; the alternative (XFL-native)
   simplifies storage but inherits XFL's verbosity/quirks and makes undo/structural sharing
   awkward. (07, 10)
@@ -123,7 +123,7 @@ infrastructure while keeping the authoring model clean.
 
 ## 6. Decisions requiring user approval (see 10 §7)
 
-1. **Native document format** — confirm `.flashcraft` (versioned, compressed, structurally
+1. **Native document format** — confirm `.anicraft` (versioned, compressed, structurally
    shared JSON) as primary, with XFL and SWF as interchange.
 2. **Reuse scope** — confirm depending on Ruffle `swf` and selected `effectcraft-*`
    (`time`, `keyframe`) crates by git pin, versus vendoring/porting them.
