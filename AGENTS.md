@@ -1,6 +1,6 @@
 # AniCraft — instructions for agents
 
-AniCraft is a proposed open-source, cross-platform, Rust-native 2D vector animation and
+AniCraft is an open-source, cross-platform, Rust-native 2D vector animation and
 interactive-content authoring application in the **Craft (ArtCraft) family** — a modern
 spiritual successor to **Macromedia Flash / Adobe Animate**. It combines classic Flash
 authoring (stage, timeline, layers, keyframes, symbols, buttons, motion/shape tweening,
@@ -8,30 +8,44 @@ ActionScript-style interactivity) with the architectural conventions, shared inf
 and visual design of the existing Craft ecosystem (VectorCraft, EffectCraft, FilmCraft,
 PhotoCraft, PdfCraft, LightCraft).
 
-> ## ⛔ RESEARCH-ONLY MODE — NO IMPLEMENTATION IS AUTHORIZED
+> ## ✅ IMPLEMENTATION MODE — PHASE-GATED AUTHORIZATION (since 2026-10-13)
 >
-> **AniCraft is currently in research-only mode.** As of this writing, the repository
-> contains **no application source code**: only a `.gitignore` and a `references/` folder of
-> user-provided screenshots.
+> Research Phase 0 is complete (`research/00`–`10`). **Phase 1 (Application Bootstrap and
+> Craft Integration) is authorized** and is executed milestone by milestone per
+> `research/09-implementation-roadmap.md`.
 >
-> You are **not** authorized to:
-> - Write application source code, or create Rust crates, workspaces, or scaffolding.
-> - Create `Cargo.toml`, `xtask`, `apps/`, `crates/`, or any build configuration.
-> - Modify any existing Craft repository (`../vectorcraft`, `../effectcraft`, `../filmcraft`,
->   `../lightcraft`, `../pdfcraft`, `../photocraft`, `../craft-libs`, `../craft-fonts`, `../ruffle`).
-> - Install dependencies or development tools, run builds, or execute applications.
-> - Build prototypes or proof-of-concept applications.
-> - Make Git commits or change Git configuration.
-> - Begin any implementation phase (Phase 1 or later).
+> Execution rules (binding until changed by the user):
+> - **One milestone at a time.** Begin a milestone only after the previous one is complete,
+>   verified, and recorded in `progress.md`. After finishing a milestone, **stop and return
+>   control to the user** — do not advance to the next milestone automatically.
+> - **Inspect the sibling Craft implementations first** (read-only) and reuse their established
+>   conventions rather than inventing parallel infrastructure.
+> - **Real functionality only.** No placeholders or filler. Do not claim anything is complete
+>   without verifying it (the §4 quality gates green, tests run, output observed).
+> - **Scope.** No Phase 2 or later work (no timeline, drawing, scripting, or format-import
+>   features) while Phase 1 is incomplete. No speculative architectural changes contrary to the
+>   approved research. No unnecessary documentation.
+> - **Sibling repositories are read-only.** Do not modify `../vectorcraft`, `../effectcraft`,
+>   `../filmcraft`, `../lightcraft`, `../pdfcraft`, `../photocraft`, `../craft-libs`,
+>   `../craft-fonts`, or `../ruffle` without explicit permission. Depending on them by pinned
+>   revision is how reuse works; `[patch]` blocks for local co-development stay commented out
+>   unless the user asks.
+> - **No autonomous subagents.**
 >
-> The **only** permitted file changes are Markdown research and planning documents inside
-> `research/` (and this file). After completing research, **stop and wait for explicit user
-> authorization** before any implementation begins. The immediate deliverable is the complete
-> Markdown research package in `research/` — **not** a working application.
+> **Approved architectural decisions (2026-10-13**, recorded in `progress.md`): Rust edition
+> 2024 with idiomatic Rust and the existing Craft conventions; reuse `craft-libs`
+> (`craft-ui`, `craft-settings`, `craft-atomic`, `craft-quit`, optional `craft-print`);
+> reuse Ruffle's `swf` crate and the compatible `effectcraft-time`/`effectcraft-keyframe`
+> primitives; `vello_cpu` as the initial (CPU reference) renderer with **GPU acceleration
+> deferred** (decision-gated at Phase 9.1); **Boa** for future JavaScript scripting; a
+> **versioned native `.anicraft` project format** (primary) with XFL/SWF interchange;
+> **dark mode is the primary interface**; the clean-room and licensing rules below are
+> unchanged; **post-CS5 (CS5+) `.fla` files are supported** (see §1); the user-provided
+> screenshots in `references/` **may be used for implementation** (see §1).
 
 The research package lives in [`research/`](research/). Read `research/00-executive-summary.md`
-first for conclusions and the recommended direction, and `research/08-proposed-architecture.md`
-for the proposed (not yet approved) architecture.
+first for conclusions, and `research/08-proposed-architecture.md` for the approved
+architecture. `progress.md` tracks executed milestones and the current state.
 
 ---
 
@@ -42,8 +56,15 @@ for the proposed (not yet approved) architecture.
 - Preserve familiar Flash/Animate authoring concepts (stage, timeline, library, symbols,
   properties, drawing tools) while adopting modern Craft architecture.
 - **Dark mode is the primary interface theme.**
-- Support modern, open output and interchange: a native document format, XFL, SWF, SVG,
-  animated images, video, sprite sheets, and standalone interactive (JS/WASM) export.
+- Support modern, open output and interchange: a versioned native document format (`.anicraft`),
+  XFL, **post-CS5 (CS5+) `.fla`** (the ZIP-compressed XFL container — import/export through the
+  same XFL machinery), SWF, SVG, animated images, video, sprite sheets, and standalone
+  interactive (JS/WASM) export. The pre-CS5 **binary** `.fla` (proprietary OLE compound
+  container, no public specification) remains unsupported by clean-room constraint (§2).
+- The user-provided screenshots in `references/` **may be used as design and implementation
+  reference** (layout, panel arrangement, palette, interaction). They are not application
+  assets: shipped assets must still satisfy the asset rules in §2 (original/open-licensed,
+  attributed), and the screenshots themselves are not bundled or embedded.
 - Prefer reuse of established Craft infrastructure and the public Flash format specifications
   (SWF, XFL, Ruffle) over parallel reimplementations — but never force inappropriate reuse.
 
@@ -125,10 +146,10 @@ These are verified conventions from the sibling repos. AniCraft must follow them
   clippy::todo, clippy::unreachable)]`. No `unsafe` (workspace `unsafe_code = "forbid"`/`"deny"`).
   Fallible work returns `Result`/`Option`; untrusted input (files, pasted data, MCP/control
   messages, command params) is handled, and importers/parsers are fuzzed.
-- **Quality gates before every commit** (once implementation begins): `cargo fmt --check`,
+- **Quality gates before every commit:** `cargo fmt --check`,
   `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace`,
   `cargo xtask layers`, `cargo xtask wasm` (everything up to the engine must build for
-  `wasm32-unknown-unknown`).
+  `wasm32-unknown-unknown`). `cargo xtask ci` runs the whole suite.
 - **Tests may unwrap** (`#[cfg(test)]`, `testkit`); integration-test files start with the
   matching `#![allow(…)]`.
 - Use `.get(i)` rather than indexing when the index comes from data; cap sizes/counts read from
@@ -137,9 +158,14 @@ These are verified conventions from the sibling repos. AniCraft must follow them
 ## 5. Documentation expectations
 
 - Keep `research/` current and internally consistent; distinguish **verified findings**
-  (cited to a file or public spec) from **recommendations** and **open questions**.
-- Once implementation begins, follow the sibling apps' progress-doc standard: a `ROADMAP.md`,
-  `docs/architecture.md`, parity/gaps documents, and a revision history with a status line.
+  (cited to a file or public spec) from **recommendations** and **open questions**. Research
+  positions that a user decision later amends get a brief, dated status note — the original
+  finding is preserved, not deleted.
+- `progress.md` tracks completed work, the current milestone, outstanding issues, and the next
+  authorized task; update it in the same change that closes a milestone.
+- Follow the sibling apps' progress-doc standard as the project grows: a `ROADMAP.md`,
+  `docs/architecture.md`, parity/gaps documents, and a revision history with a status line
+  (Phase 9.6).
 - Cite external specifications (SWF File Format Specification, XFL schema, CreateJS easing,
   AVM2/ABC overview) by URL where used.
 - Do not produce placeholder or filler documentation.
@@ -159,24 +185,35 @@ These are verified conventions from the sibling repos. AniCraft must follow them
 Work proceeds in the phases defined in `research/09-implementation-roadmap.md`
 (Phase 0 research → Phase 9 production readiness). Rules:
 
-- **One phase at a time.** A phase's milestones must be complete and verified before the next
-  phase begins.
+- **One phase at a time, one milestone at a time.** A phase's milestones must be complete and
+  verified before the next phase begins; within a phase, milestones are executed in dependency
+  order, one at a time, with control returned to the user after each (see the implementation
+  mode block above).
 - **Measurable completion criteria.** Every milestone has observable, testable criteria.
-- **Update the roadmap and progress docs in the same change** that closes a milestone.
-- **User approval gates.** Beginning any implementation phase (Phase 1 onward) requires explicit
-  user authorization. Phases with major tradeoffs (native format choice, scripting engine,
-  SWF/FLA scope, GPU investment) require an explicit decision before they start.
+- **Update `progress.md` (and the roadmap docs) in the same change** that closes a milestone.
+- **User approval gates.** Beginning an implementation phase requires explicit user
+  authorization. Phases with major tradeoffs (native format choice, scripting engine,
+  SWF/XFL/FLA scope, GPU investment) require an explicit decision before they start. Status of
+  each gate: §8.
 
-## 8. Requirements for obtaining user approval
+## 8. Authorization status and remaining gates
 
-Do **not** begin implementation, initialize a Rust project, or start Phase 1 until the user
-explicitly instructs you to. Before proposing to start, present:
+Phase 0 (research) is **complete** (`research/00`–`10`). **Phase 1 is authorized** as of
+2026-10-13, with the architectural decisions approved by the user (full record in
+`progress.md`):
 
-1. The approved research package (`research/`).
-2. The decisions requiring approval (see `research/10-risks-and-open-questions.md` §7): the
-   native document format, the scope of reuse from EffectCraft/Ruffle, the scripting engine
-   (boa), the SWF/XFL interop scope, and the GPU investment plan.
-3. Confirmation that no application code or existing Craft repositories will be modified until
-   authorized.
+| # | Decision | Status |
+|---|----------|--------|
+| D1 | Native document format: versioned `.anicraft` (JSON, structurally shared) primary + XFL/SWF interchange | **Approved** |
+| D2 | Reuse scope: `craft-libs` + Ruffle `swf` + `effectcraft-time`/`effectcraft-keyframe` + Boa + `vello_cpu` + kurbo/peniko (FilmCraft codec pins added in Phase 8) | **Approved** |
+| D3 | Scripting engine: Boa (`boa_engine`) | **Approved** (Phase 7) |
+| D4 | Interop scope: SWF read-all + practical write (≤ 19), XFL round-trip, **post-CS5 `.fla` (ZIP-of-XFL) supported**; pre-CS5 binary `.fla`, SWF 20–30, ActionScript authoring excluded | **Approved (amended 2026-10-13)** |
+| D5 | GPU: CPU-first (`vello_cpu`), wgpu deferred and decision-gated at Phase 9.1 | **Approved** |
+| D6 | Audio/video scope in v1 | **Gate pending** (before Phase 8; recommendation: vector + image/video export first, audio deferred) |
+| D7 | ActionScript legacy: out of scope for v1 (boa/JS only) | Confirmed by default (non-gating) |
+| D8 | Boolean-ops backend (port VectorCraft `pathops` vs. maintained kurbo-based crate) | **Gate pending** (before milestone 3.5) |
+| D9 | Morph-algorithm approach (motion-first, shape-tween behind a matched-vertex fast path) | **Gate pending** (before milestone 6.3) |
+| D10 | Web target scope (player/light-authoring wasm v1) | Confirmed by default (non-gating) |
 
-**Until that authorization is given, the deliverable remains the Markdown research package only.**
+Until a pending gate is decided by the user, the gated milestone waits; everything else in
+Phase 1 proceeds. Sibling repositories remain read-only (see the implementation mode block).

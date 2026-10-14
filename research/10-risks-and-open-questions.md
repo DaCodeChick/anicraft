@@ -110,6 +110,9 @@ A wgpu compositor is significant work. **Recommendation: defer** (Phase 9.1, dec
 - **U7. The provided reference screenshots.** `references/` holds four JPEGs (UI screenshots).
   Their provenance/license is unverified and their pixels were not analyzed. **[INVESTIGATE]**
   use them as local side-by-side references in Phase 1+ only; do not commit as assets.
+  > **Status note (2026-10-13, user decision):** the screenshots **may be used for
+  implementation** (design/layout/palette reference) — the usage restriction is lifted. They
+  still are not application assets (C5 applies to shipped assets).
 - **U8. `craftrules` not local.** The shared standards repo (`craftrules`) referenced by the
   siblings is **not checked out locally**, so its `standards/*.md` (never-crash, engineering,
   licensing, fonts, test-corpora, progress-docs) were inferred from the sibling `AGENTS.md`/docs

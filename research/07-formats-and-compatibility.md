@@ -109,6 +109,11 @@ schema is clean-room. No Adobe software involved.
 
 ## 4. FLA (proprietary — out of scope)
 
+> **Status note (2026-10-13, user decision):** **post-CS5 (CS5+) `.fla` is now in scope.** A
+> CS5+ FLA is a ZIP of the XFL structure, so it is supported through the XFL interchange
+> machinery (`anicraft-xfl`) under the `.fla` name/container (import and export). The **pre-CS5
+> binary** FLA below remains out of scope. See `AGENTS.md` §1/§8 (D4, amended).
+
 **FLA** (pre-CS5) is a **proprietary binary** (Microsoft Compound File / OLE structured storage
 container; CS5+ FLA is a ZIP of XFL). There is **no public specification** for the classic binary
 FLA, and deriving one would require **reverse engineering**, which is **forbidden** by the

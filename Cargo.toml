@@ -1,0 +1,94 @@
+[workspace]
+resolver = "3"
+# `crates/*` and `apps/*` are added here as the first crate/app of each directory lands
+# (milestone 1.2: apps/anicraft; 1.3: crates/engine). Cargo rejects a member glob that matches
+# nothing, so the final shape is `members = ["crates/*", "apps/*", "xtask"]` (research/08 §1).
+members = ["xtask"]
+default-members = ["xtask"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.95"
+repository = "https://github.com/storytold/anicraft"
+
+[workspace.dependencies]
+# Shared Craft infrastructure (craft-libs), pinned to a revision. Recorded at the start of
+# implementation (2026-10-13); bump deliberately, together with a review of the API.
+craft-atomic = { git = "https://github.com/storytold/craft-libs", rev = "6006abb757df7030ffdd78c4fc952904a9d36491" }
+craft-print = { git = "https://github.com/storytold/craft-libs", rev = "6006abb757df7030ffdd78c4fc952904a9d36491" }
+craft-quit = { git = "https://github.com/storytold/craft-libs", rev = "6006abb757df7030ffdd78c4fc952904a9d36491" }
+craft-settings = { git = "https://github.com/storytold/craft-libs", rev = "6006abb757df7030ffdd78c4fc952904a9d36491" }
+craft-ui = { git = "https://github.com/storytold/craft-libs", rev = "6006abb757df7030ffdd78c4fc952904a9d36491", features = ["serde"] }
+
+# Reused animation primitives (EffectCraft), pinned to a revision. Only the generic `time` and
+# `keyframe` crates are reused; EffectCraft's After Effects project/render model is not.
+effectcraft-time = { git = "https://github.com/storytold/effectcraft", rev = "470ea7a3af82ee1dd1d2f86c777fe6891bd0c37b" }
+effectcraft-keyframe = { git = "https://github.com/storytold/effectcraft", rev = "470ea7a3af82ee1dd1d2f86c777fe6891bd0c37b" }
+
+# SWF read/write (Ruffle; MIT OR Apache-2.0). The published crates.io crate from the public
+# ruffle-rs/ruffle repo (the local fork is a reference checkout, not a publishable origin).
+swf = "0.3"
+
+# foundation
+kurbo = { version = "0.13", features = ["serde"] }
+peniko = "0.6"
+thiserror = "2"
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = { version = "1", features = ["float_roundtrip"] }
+log = "0.4"
+proptest = "1"
+
+# rendering / formats
+vello_cpu = { version = "0.2", features = ["f32_pipeline"] }
+usvg = "0.48"
+skrifa = "0.47"
+harfrust = "0.13"
+
+# scripting (JavaScript via Boa; pure Rust, builds for wasm32)
+boa_engine = { version = "0.22", default-features = false }
+
+# ui (L6+ only — see xtask/src/layers.rs UI_CRATES)
+egui = "0.36"
+egui_extras = { version = "0.36", default-features = false, features = ["svg"] }
+eframe = { version = "0.36", default-features = false }
+egui_kittest = "0.36"
+rfd = "0.17"
+cpal = "0.16"
+muda = { version = "0.21", default-features = false }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+dbg_macro = "warn"
+# AniCraft never crashes: shipped code returns `Result`/`Option` instead of panicking (see
+# AGENTS.md › Engineering standards). Tests may unwrap (clippy.toml).
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+unreachable = "deny"
+
+# Local co-development against checkouts of the shared repos next to this repo: uncomment.
+# [patch."https://github.com/storytold/craft-libs"]
+# craft-atomic = { path = "../craft-libs/crates/atomic" }
+# craft-print = { path = "../craft-libs/crates/print" }
+# craft-quit = { path = "../craft-libs/crates/quit" }
+# craft-settings = { path = "../craft-libs/crates/settings" }
+# craft-ui = { path = "../craft-libs/crates/ui" }
+# [patch."https://github.com/storytold/effectcraft"]
+# effectcraft-time = { path = "../effectcraft/crates/time" }
+# effectcraft-keyframe = { path = "../effectcraft/crates/keyframe" }
+
+[profile.dev.package."*"]
+opt-level = 2
+
+[profile.dev]
+opt-level = 1
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
