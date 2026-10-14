@@ -1,0 +1,22 @@
+[package]
+name = "anicraft"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+craft-ui = { workspace = true }
+eframe = { workspace = true, features = ["default_fonts", "glow", "wayland", "x11"] }
+egui = { workspace = true }
+
+# `menu` (the macOS app menu whose Quit asks the app first) pulls muda; it is only needed on
+# macOS, so the feature is gated to the platform that uses it.
+[target.'cfg(target_os = "macos")'.dependencies]
+craft-quit = { workspace = true, features = ["egui", "menu"] }
+
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+craft-quit = { workspace = true, features = ["egui"] }

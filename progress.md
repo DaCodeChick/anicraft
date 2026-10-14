@@ -3,8 +3,8 @@
 > Tracking document for phase/milestone execution (see `AGENTS.md` §5/§7). Updated in the same
 > change that closes a milestone.
 
-**Status line (2026-10-13):** Phase 1 in progress — **milestone 1.1 complete and verified**;
-awaiting user authorization for milestone 1.2.
+**Status line (2026-10-14):** Phase 1 in progress — **milestones 1.1–1.2 complete and verified**;
+awaiting user authorization for milestone 1.3.
 
 ## Approved decisions (user, 2026-10-13)
 
@@ -86,9 +86,71 @@ dated status notes for the 2026-10-13 amendments.
 6. Research uncertainty U3 (exact `effectcraft-keyframe` API fit for CreateJS easing) is deferred
    to Phase 6.1 as planned.
 
+### Milestone 1.2 — `apps/anicraft` shell (2026-10-14)
+
+**Built** (all verified by running the gates below):
+
+- Workspace: `members` now `["apps/*", "xtask"]` (`crates/*` joins when the first library crate
+  lands, 1.3; final shape per research/08 §1); `default-members = ["apps/anicraft"]` so a bare
+  `cargo run` at the root launches the desktop app (the xtask binary stays reachable through the
+  `cargo xtask` alias).
+- `apps/anicraft` — a launchable eframe shell (the `glow` renderer; no wgpu — GPU deferred per
+  decision D5). Deliberately feature-free: no panels, tools or documents are drawn, so nothing
+  here is a placeholder for later milestones.
+  - `src/theme.rs` — `Tokens`, the full doc-06-§2 dark palette as `Tokens::DARK` (neutral grays,
+    single `#378ef0` accent, `#1e1e1e` pasteboard, radius 2, 13 pt base); `apply(ctx, tokens)`
+    installs the egui `Visuals` (five widget states through `craft_ui::theme::WidgetPalette`,
+    selection/hyperlink/shadows) plus spacing and text styles — the VectorCraft `theme.rs`
+    pattern, dark-only for now. Tests pin the palette to the documented reference values and
+    check `apply` colors the five widget states.
+  - `src/main.rs` — window titled **AniCraft** (1440×900 default, 800×500 minimum, app id
+    `ai.storyteller.anicraft`); the central area is the dark pasteboard with the app name and
+    version; `--version` prints `anicraft <version>`; any other argument is rejected.
+  - `craft-quit` wiring: `on_close_request` at the end of `eframe::App::logic` (the app's own
+    close decision would precede it; with no document yet there is nothing to save); on macOS
+    `install_app_menu` replaces winit's default app menu so Quit (⌘Q) asks the app first. The
+    `menu` feature (muda) is target-gated to macOS so no menu backend builds elsewhere.
+- First consumer of the `craft-libs` pins: `craft-ui` and `craft-quit` now materialize in
+  `Cargo.lock` (git rev `6006abb…`, per the 1.1 pins).
+- Repository metadata corrected: `.gitignore` no longer ignores `Cargo.lock` (sibling apps commit
+  it; this is a binary workspace), and `[workspace.package].repository` now matches the actual
+  origin remote (`github.com/DaCodeChick/anicraft`).
+
+**Verification (2026-10-14, local, cargo/rustc 1.99.0, macOS):**
+
+| Gate | Result |
+|------|--------|
+| `cargo fmt --all -- --check` | pass |
+| `cargo clippy --workspace --all-targets -- -D warnings` | pass |
+| `cargo test --workspace` | 14/14 pass (theme 2, layers rule engine 12) |
+| `cargo xtask layers` | pass (2 members: `anicraft`, `xtask` — both exempt; no violations) |
+| `cargo xtask wasm` | pass (no wasm-target crates yet) |
+| `cargo xtask ci` (all five) | pass |
+| `anicraft --version` | prints `anicraft 0.1.0`, exit 0; unknown argument → stderr message, exit 1 |
+| Launch | `cargo run -p anicraft` opens the window and the process stays alive |
+| Runtime (macOS) | launched and observed: the window appears in the on-screen window list owned by `anicraft`, titled **AniCraft** (1440×932 logical = 1440×900 content + 32 pt title bar, centered); a by-window-id capture shows the content area as a uniform `#1e1e1e` pasteboard (1760 of 1799 content rows, full width) with the `#f5f5f5` “AniCraft” label and the `#a8a8a8` version line; the process stops cleanly on SIGTERM |
+
+**Notes / limitations:**
+
+1. Runtime verification was performed on macOS only (the only platform available here). The CI
+   workflow runs the full gate matrix on macOS/Ubuntu/Windows; launching on the other two OSes is
+   untested locally.
+2. The UI chrome is composited by eframe's `glow` (CPU) renderer. The stage compositor
+   (`vello_cpu` CPU reference, later wgpu) is Phase 2/9.1 scope (decision D5), not this shell.
+3. No custom window/Dock icon (eframe's default) and eframe's default fonts (via `default_fonts`):
+   an original icon set and the `craft-fonts` UI font arrive with the `ui-egui` work (Phase 2/3)
+   and packaging (9.5) — no assets are bundled in this milestone.
+4. The dark theme is applied unconditionally (the approved primary theme); a user theme
+   preference persisted via `craft-settings` is not part of the shell.
+5. Interactive close (close button / ⌘Q) was not exercised in this environment: the agent
+   session has no accessibility permission, so UI scripting is blocked. The wiring follows the
+   `craft-quit` documented pattern (`on_close_request` last in `logic`; on macOS the app menu's
+   Quit goes through the app first), whose close-takeover behaviour is unit-tested in
+   `craft-libs`; a clean process stop on SIGTERM was observed locally.
+
 ## Current milestone
 
-None — milestone 1.1 is closed; awaiting user authorization for the next milestone.
+None — milestone 1.2 is closed; awaiting user authorization for the next milestone.
 
 ## Outstanding issues
 
@@ -98,7 +160,8 @@ None — milestone 1.1 is closed; awaiting user authorization for the next miles
 
 ## Next authorized task (pending user)
 
-**Milestone 1.2 — `apps/anicraft` shell** (research/09 §1): an eframe window with a dark
-`theme.rs` (doc 06 palette) via `craft-ui` + `craft-quit`, an "AniCraft" title bar, `cargo run`
-working on macOS/Windows/Linux. First consumer of the `craft-libs` pins (materializes them in
-`Cargo.lock`); adds `apps/*` to workspace `members`.
+**Milestone 1.3 — `anicraft-engine` skeleton** (research/09 §1): a `Session` with an (empty)
+`CommandSpec` registry, `Session::execute`, `Arc<Document>` undo, and a `guard`; a "New Document"
+command; the JSON control channel (`--control <port>`) and `ui.screenshot` working. Adds
+`crates/*` to workspace `members` with the first library crates (`anicraft-geom`/`color`/`time`
+per 2.1 may come with or ahead of it).

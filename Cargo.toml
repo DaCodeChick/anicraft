@@ -1,17 +1,19 @@
 [workspace]
 resolver = "3"
-# `crates/*` and `apps/*` are added here as the first crate/app of each directory lands
-# (milestone 1.2: apps/anicraft; 1.3: crates/engine). Cargo rejects a member glob that matches
-# nothing, so the final shape is `members = ["crates/*", "apps/*", "xtask"]` (research/08 §1).
-members = ["xtask"]
-default-members = ["xtask"]
+# `crates/*` is added when the first library crate lands (milestone 1.3). The final shape is
+# `members = ["crates/*", "apps/*", "xtask"]` (research/08 §1). Cargo rejects a member glob that
+# matches nothing.
+members = ["apps/*", "xtask"]
+# A bare `cargo run` at the root launches the desktop app; the xtask binary is reached through
+# the `cargo xtask` alias. (When a second binary lands, pin the default with `default-run`.)
+default-members = ["apps/anicraft"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.95"
-repository = "https://github.com/storytold/anicraft"
+repository = "https://github.com/DaCodeChick/anicraft"
 
 [workspace.dependencies]
 # Shared Craft infrastructure (craft-libs), pinned to a revision. Recorded at the start of
